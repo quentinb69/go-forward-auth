@@ -1,0 +1,8 @@
+---
+CookieDomain: ".quentinb.duckdns.org"
+CookieName: "_auth"
+Expire: 120
+HtmlFile: "/data/index.html"
+Users:
+  - u1 : "p1"
+  - u2 : "p2"
