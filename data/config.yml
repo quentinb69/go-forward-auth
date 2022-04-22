@@ -3,6 +3,7 @@ CookieDomain: ".quentinb.duckdns.org"
 CookieName: "_auth"
 Expire: 120
 HtmlFile: "/data/index.html"
+JwtKey: "jwt_key"
 Users:
-  - u1 : "p1"
-  - u2 : "p2"
+  - toto : "password"
+  - user : "pwd"
