@@ -4,11 +4,11 @@ WORKDIR /app
 
 COPY go.* ./
 
-RUN go get github.com/knadh/koanf \
-	&& go get github.com/knadh/koanf/parsers/yaml \
-	&& go get github.com/knadh/koanf/providers/file \
-	&& go get github.com/google/uuid \
-	&& go get github.com/gorilla/schema
+#RUN go get github.com/knadh/koanf \
+#	&& go get github.com/knadh/koanf/parsers/yaml \
+#	&& go get github.com/knadh/koanf/providers/file \
+#	&& go get github.com/gorilla/schema \
+#	&& go get github.com/dgrijalva/jwt-go
 
 COPY data/* /data/
 COPY src/*.go ./
