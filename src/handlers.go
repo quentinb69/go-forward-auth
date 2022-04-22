@@ -8,7 +8,7 @@ import (
 )
 
 // Return HTML
-func RenderTemplate (w *http.ResponseWriter, session *Session, ip string, httpCode int) {
+func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode int) {
 
 	data := make(map[string]string)
 	data["ip"] = ip
@@ -16,9 +16,9 @@ func RenderTemplate (w *http.ResponseWriter, session *Session, ip string, httpCo
 	data["state"] = "out"
 
 	// Login ok
-	if session != nil {
+	if claims != nil {
 		data["state"] = "in"
-		data["username"] = session.username
+		data["username"] = claims.Username
 	}
 
 	// load template
@@ -39,19 +39,18 @@ func RenderTemplate (w *http.ResponseWriter, session *Session, ip string, httpCo
 func Logout(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
-	_, cookie, err := GetSession (r, ip)
+	_, _, err := GetClaims (r, ip)
 
 	// return 401
 	if err != nil {
 		log.Printf("Failed attempt for: %s", ip)
-		log.Printf("Session error: %s", err)
+		log.Printf("Claims error: %s", err)
 		time.Sleep(500 * time.Millisecond)
 		http.Redirect(w, r, "/", 302)
 		return
 	}
 
-	// remove session (server) and cookie (client)
-	RemoveSession(cookie)
+	// remove cookie
 	http.SetCookie(w, &http.Cookie{
 		Name:    configuration.CookieName,
 		Value:   "",
@@ -83,7 +82,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-        CreateOrExtendSession(&w, credentials, ip, nil, nil)
+        CreateOrExtendClaims(&w, credentials, ip, nil, nil)
 
 	// return 200
 	log.Printf("Login for: %s", ip)
@@ -95,36 +94,36 @@ func Login(w http.ResponseWriter, r *http.Request) {
 func Home (w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
-	session, cookie, errSession := GetSession (r, ip)
+	claims, cookie, errClaims := GetClaims (r, ip)
 	credentials, errCredentials := GetCredentials (r)
 
-	// no valid session and no credentials submitted
-	if errSession != nil && errCredentials != nil {
+	// no valid claims and no credentials submitted
+	if errClaims != nil && errCredentials != nil {
 		log.Printf("Failed attempt for: %s", ip)
-		log.Printf("Session error: %s", errSession)
-		log.Printf("Credentials error: %s", errCredentials)
+		log.Printf("Claims error: %v", errClaims)
+		log.Printf("Credentials error: %v", errCredentials)
 		time.Sleep(500 * time.Millisecond)
-		RenderTemplate(&w, session, ip, http.StatusUnauthorized)
+		RenderTemplate(&w, claims, ip, http.StatusUnauthorized)
 		return
 	}
 
 	// credentials supplied
 	if errCredentials == nil {
-		log.Printf("Create session for: %s", ip)
-		CreateOrExtendSession(&w, credentials, ip, session, cookie)
-		RenderTemplate(&w, session, ip, 300)
+		log.Printf("Create claims for: %s", ip)
+		CreateOrExtendClaims(&w, credentials, ip, claims, cookie)
+		RenderTemplate(&w, claims, ip, 300)
 		return
 	}
 
-	// session exists
-	/*if errSession == nil {
-		log.Printf("Refresh session for: %s", ip)
-		CreateOrExtendSession(&w, credentials, ip, session, cookie)
-		RenderTemplate(&w, session, ip, 300)
+	// claims exists and need to be extended
+	if errClaims == nil && time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > 30*time.Second {
+		log.Printf("Refresh claims for: %s", ip)
+		CreateOrExtendClaims(&w, credentials, ip, claims, cookie)
+		RenderTemplate(&w, claims, ip, 300)
 		return
-	}*/
+	}
 
 	//log.Printf("Home for: %s", ip)
-	RenderTemplate(&w, session, ip, http.StatusOK)
+	RenderTemplate(&w, claims, ip, http.StatusOK)
 	return
 }
