@@ -8,7 +8,7 @@ COPY go.* ./
 #	&& go get github.com/knadh/koanf/parsers/yaml \
 #	&& go get github.com/knadh/koanf/providers/file \
 #	&& go get github.com/gorilla/schema \
-#	&& go get github.com/dgrijalva/jwt-go
+#	&& go get github.com/golang-jwt/jwt/v4
 
 COPY data/* /data/
 COPY src/*.go ./
