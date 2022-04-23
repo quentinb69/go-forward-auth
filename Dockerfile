@@ -17,6 +17,10 @@ RUN go build -o /go-forward-auth
 
 FROM alpine
 
+# for timezone
+RUN apk update \
+	&& apk add --no-cache tzdata
+
 WORKDIR /
 
 COPY --from=builder /go-forward-auth /go-forward-auth
