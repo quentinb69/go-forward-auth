@@ -26,6 +26,7 @@ func CreateOrExtendClaims (w *http.ResponseWriter, creds *Credentials, ip string
 	// create claims or extends exitent
 	if claims != nil {
 		claims.ExpiresAt = expiresAt.Unix()
+		claims.Ip = ip
 	} else {
 		claims = &Claims{
 			Username: creds.Username,

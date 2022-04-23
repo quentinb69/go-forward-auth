@@ -8,16 +8,15 @@ import (
 )
 
 // Return HTML
-func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode int) {
+func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode int, state string) {
 
 	data := make(map[string]string)
 	data["ip"] = ip
 	data["csrf"] = "TODO"
-	data["state"] = "out"
+	data["state"] = state
 
 	// Login ok
 	if claims != nil {
-		data["state"] = "in"
 		data["username"] = claims.Username
 	}
 
@@ -96,6 +95,7 @@ func Home (w http.ResponseWriter, r *http.Request) {
 	ip := GetIp(r)
 	claims, cookie, errClaims := GetClaims (r, ip)
 	credentials, errCredentials := GetCredentials (r)
+        state:= "out"
 
 	// no valid claims and no credentials submitted
 	if errClaims != nil && errCredentials != nil {
@@ -103,15 +103,18 @@ func Home (w http.ResponseWriter, r *http.Request) {
 		log.Printf("Claims error: %v", errClaims)
 		log.Printf("Credentials error: %v", errCredentials)
 		time.Sleep(500 * time.Millisecond)
-		RenderTemplate(&w, claims, ip, http.StatusUnauthorized)
+		RenderTemplate(&w, claims, ip, http.StatusUnauthorized, state)
 		return
 	}
+
+	// now we are allowed
+	state = "in"
 
 	// credentials supplied
 	if errCredentials == nil {
 		log.Printf("Create claims for: %s", ip)
 		CreateOrExtendClaims(&w, credentials, ip, claims, cookie)
-		RenderTemplate(&w, claims, ip, 300)
+		RenderTemplate(&w, claims, ip, 300, state)
 		return
 	}
 
@@ -119,11 +122,11 @@ func Home (w http.ResponseWriter, r *http.Request) {
 	if errClaims == nil && time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 1*time.Minute {
 		log.Printf("Refresh claims for: %s", ip)
 		CreateOrExtendClaims(&w, credentials, ip, claims, cookie)
-		RenderTemplate(&w, claims, ip, 300)
+		RenderTemplate(&w, claims, ip, 300, state)
 		return
 	}
 
 	//log.Printf("Home for: %s", ip)
-	RenderTemplate(&w, claims, ip, http.StatusOK)
+	RenderTemplate(&w, claims, ip, http.StatusOK, state)
 	return
 }
