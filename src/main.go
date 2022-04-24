@@ -7,12 +7,18 @@ import (
 )
 
 func main() {
+
 	loadConfiguration()
+
 	http.HandleFunc("/", Home)
-	http.HandleFunc("/favicon.ico", Favicon)
 	http.HandleFunc("/login", Login)
 	http.HandleFunc("/logout", Logout)
-	// start the server on port 8080
-	log.Printf("Loading server on port %d", configuration.Port)
-	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(configuration.Port), nil))
+
+	log.Printf("Loading server on port %d. TLS value is %t", configuration.Port, configuration.Tls)
+	var port = ":"+strconv.Itoa(configuration.Port)
+	if ! configuration.Tls {
+		log.Fatal(http.ListenAndServe(port, nil))
+	} else {
+		log.Fatal(http.ListenAndServeTLS(port, configuration.Cert, configuration.PrivateKey, nil))
+	}
 }

@@ -11,6 +11,9 @@ import (
 )
 
 type config struct {
+	Tls		bool			`koanf:"Tls"`
+	PrivateKey	string			`koanf:"PrivateKey"`
+	Cert		string			`koanf:"Cert"`
 	Port		int			`koanf:"Port"`
 	CookieDomain	string			`koanf:"CookieDomain"`
 	CookieName	string			`koanf:"CookieName"`
@@ -21,8 +24,7 @@ type config struct {
 	Users		map[string]string	`koanf:"Users"`
 }
 
-const defaultConfigurationFile = "/data/config.yml"
-const defaultPort = "8080"
+const defaultConfigurationFile = "default.config.yml"
 
 var k = koanf.New(".")
 var configuration config
@@ -32,13 +34,20 @@ func loadConfiguration() {
 	// read configuration file from command line
 	var configFile string
 	var debug bool
-	flag.StringVar(&configFile, "conf", defaultConfigurationFile, "Link configuration file.")
+	flag.StringVar(&configFile, "conf", "", "Link configuration file.")
 	flag.BoolVar(&debug, "d", false, "Show configuration information in log.")
 	flag.Parse()
 
+	// default configuration
+	if err :=  k.Load(file.Provider(defaultConfigurationFile), yaml.Parser()); err != nil {
+	        log.Fatalf("Error loading default configuration: %v", err)
+        }
+
 	// read configuration from file
-	if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
-		log.Fatalf("Error loading configuration file: %v", err)
+	if configFile != "" {
+		if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
+			log.Fatalf("Error loading configuration file: %v", err)
+		}
 	}
 
 	// load configuration in global var
@@ -46,7 +55,7 @@ func loadConfiguration() {
 		log.Fatalf("Error parsing configuration: %v", err)
 	}
 
-	log.Printf("Configuration loaded from file: %s", configFile)
+	log.Printf("Configuration loaded from file: %s, %s", defaultConfigurationFile, configFile)
 
 	if debug {
 		log.Printf("Configuration from file: %v", k)
