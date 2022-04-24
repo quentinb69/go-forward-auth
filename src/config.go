@@ -17,6 +17,7 @@ type config struct {
 	Expire		time.Duration		`koanf:"Expire"`
 	HtmlFile	string			`koanf:"HtmlFile"`
 	JwtKey		[]byte			`koanf:"JwtKey"`
+	HashCost	int			`koanf:"HashCost"`
 	Users		map[string]string	`koanf:"Users"`
 }
 

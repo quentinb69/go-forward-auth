@@ -37,8 +37,8 @@ func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode
 }
 
 // LOGOUT HANDLER
-// return 401 if not logged in
-// return 300 if diconnected
+// return 302 if not logged in
+// return 200 if diconnected
 func Logout(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
@@ -69,7 +69,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 // LOGIN HANDLER
-// return 300 if login ok
+// return 302 if login ok
 // return 401 if login ko
 func Login(w http.ResponseWriter, r *http.Request) {
 

@@ -19,11 +19,11 @@ type Credentials struct {
         Csrf string `schema: csrf,required`
 }
 
-func (c Credentials) isValid() (bool, error) {
+func (c Credentials) isValid() error {
 
 	// if user list is empty
 	if configuration.Users == nil {
-		return false, errors.New("No usersi available")
+		return errors.New("No user available")
 	}
 
 	// Get the expected password
@@ -31,13 +31,9 @@ func (c Credentials) isValid() (bool, error) {
 
         // if password differs
         if !ok {
-                return false , errors.New("No password for user")
+                return errors.New("No password for user")
         }
-        if expectedPassword != c.Password {
-                return false , errors.New("Bad password")
-        }
-
-        return true , nil
+	return IsValidHash(c.Password, expectedPassword)
 }
 
 // Wrapper to get Credentials form POST or HEADER
@@ -54,11 +50,8 @@ func GetCredentials (r *http.Request) (*Credentials, error) {
         }
 
 	// check if creds are valid
-	valid, err := creds.isValid()
-	if !valid {
-		return creds, err
-	}
-        return creds, err
+	err = creds.isValid()
+	return creds, err
 }
 
 // Extract Credentials from POST

@@ -8,7 +8,9 @@ COPY go.* ./
 #	&& go get github.com/knadh/koanf/parsers/yaml \
 #	&& go get github.com/knadh/koanf/providers/file \
 #	&& go get github.com/gorilla/schema \
-#	&& go get github.com/golang-jwt/jwt/v4
+#	&& go get github.com/golang-jwt/jwt/v4 \
+#	&& go get golang.org/x/crypto/bcrypt \
+#	&& go get github.com/fsnotify/fsnotify@v1.4.9
 
 COPY data/index.html /data/
 COPY data/config.example.yml /data/
@@ -26,7 +28,7 @@ WORKDIR /
 
 COPY --from=builder /go-forward-auth /go-forward-auth
 COPY --from=builder /data/* /data/
-#COPY --from=builder /app/go.* /data/
+#COPY --from=builder /app/go.* /tmp/
 
 USER nobody:nobody
 

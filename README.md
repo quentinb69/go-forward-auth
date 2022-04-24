@@ -20,8 +20,11 @@ To log in, credentials are passed via header (because POST is not forwarded to m
 
 WIP
 - ~~jwt instead of cookie and session~~
-- password saved as hash using bcrypt
+- ~~password saved as hash using bcrypt~~
 - ssl with selfgenerating cert
+- CSRF
+- help tool for bcrypt
+- pass header value such as username when 200
 - ~~choose config file from flag~~
 - automatic test
 - automatic image push on docker hub
