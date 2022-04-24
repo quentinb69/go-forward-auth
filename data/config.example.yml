@@ -1,0 +1,10 @@
+---
+Port: 8080
+CookieDomain: ""
+CookieName: "_"
+Expire: 60
+HtmlFile: "/data/index.html"
+JwtKey: ""
+Users:
+  - toto : "pass"
+  - user : "pwd"

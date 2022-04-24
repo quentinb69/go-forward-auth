@@ -10,7 +10,8 @@ COPY go.* ./
 #	&& go get github.com/gorilla/schema \
 #	&& go get github.com/golang-jwt/jwt/v4
 
-COPY data/* /data/
+COPY data/index.html /data/
+COPY data/config.example.yml /data/
 COPY src/*.go ./
 
 RUN go build -o /go-forward-auth
@@ -26,8 +27,6 @@ WORKDIR /
 COPY --from=builder /go-forward-auth /go-forward-auth
 COPY --from=builder /data/* /data/
 #COPY --from=builder /app/go.* /data/
-
-EXPOSE 8080
 
 USER nobody:nobody
 

@@ -11,6 +11,7 @@ import (
 )
 
 type config struct {
+	Port		int			`koanf:"Port"`
 	CookieDomain	string			`koanf:"CookieDomain"`
 	CookieName	string			`koanf:"CookieName"`
 	Expire		time.Duration		`koanf:"Expire"`
@@ -20,6 +21,8 @@ type config struct {
 }
 
 const defaultConfigurationFile = "/data/config.yml"
+const defaultPort = "8080"
+
 var k = koanf.New(".")
 var configuration config
 
@@ -27,7 +30,9 @@ func loadConfiguration() {
 
 	// read configuration file from command line
 	var configFile string
+	var debug bool
 	flag.StringVar(&configFile, "conf", defaultConfigurationFile, "Link configuration file.")
+	flag.BoolVar(&debug, "d", false, "Show configuration information in log.")
 	flag.Parse()
 
 	// read configuration from file
@@ -41,5 +46,13 @@ func loadConfiguration() {
 	}
 
 	log.Printf("Configuration loaded from file: %s", configFile)
+
+	if debug {
+		log.Printf("Configuration from file: %v", k)
+		log.Printf("Remplacing CookieDomain")
+		configuration.CookieDomain=""
+		log.Printf("Configuration loaded: %v", configuration)
+	}
+
 	return
 }

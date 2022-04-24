@@ -5,6 +5,10 @@ import (
 	"html/template"
 	"time"
 	"log"
+	"bytes"
+	"image"
+	"image/gif"
+	"strconv"
 )
 
 // Return HTML
@@ -128,5 +132,17 @@ func Home (w http.ResponseWriter, r *http.Request) {
 
 	//log.Printf("Home for: %s", ip)
 	RenderTemplate(&w, claims, ip, http.StatusOK, state)
+	return
+}
+
+// return abrotrary designed favicon
+func Favicon (w http.ResponseWriter, r *http.Request) {
+	var buf bytes.Buffer
+	gif.Encode(&buf, image.Rect(4, 4, 12, 12), nil)
+
+	w.Header().Set("Content-Type", "image/jpeg")
+	w.Header().Set("Content-Length", strconv.Itoa(len(buf.Bytes())))
+	w.Write(buf.Bytes())
+
 	return
 }
