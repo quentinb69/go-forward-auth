@@ -12,25 +12,29 @@ COPY go.* ./
 #	&& go get golang.org/x/crypto/bcrypt \
 #	&& go get github.com/fsnotify/fsnotify@v1.4.9
 
-COPY data/index.html /data/
-COPY data/config.example.yml /data/
 COPY src/*.go ./
 
 RUN go build -o /go-forward-auth
 
+
 FROM alpine
 
-# for timezone
 RUN apk update \
-	&& apk add --no-cache tzdata
+	&& apk upgrade --no-cache \
+	&& apk add --no-cache openssl tzdata su-exec bash shadow
 
-WORKDIR /
+WORKDIR /opt/gfa
 
-COPY --from=builder /go-forward-auth /go-forward-auth
-COPY --from=builder /data/* /data/
 #COPY --from=builder /app/go.* /tmp/
+COPY --from=builder /go-forward-auth ./gfa
+COPY default.config.yml ./
+COPY data/* ./data/
 
-USER nobody:nobody
+COPY entrypoint.sh /usr/local/bin
+RUN chmod a+x /usr/local/bin/entrypoint.sh
 
-CMD [ "/go-forward-auth" ]
+RUN adduser -D gfa && chown -R gfa:gfa .
+USER gfa:gfa
 
+ENTRYPOINT [ "entrypoint.sh" ]
+CMD [ "/opt/gfa/gfa" ]
