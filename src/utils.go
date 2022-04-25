@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"strings"
+	"html"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,7 +19,11 @@ func GetIp(r *http.Request) string {
                 ip = r.RemoteAddr
         }
         // if multiple ips, get the first
-        return strings.Split(ip, ":")[0]
+        ip = strings.Split(ip, ":")[0]
+	//sanitize
+	escapedIp := strings.Replace(ip, "\n", "", -1)
+	escapedIp = strings.Replace(ip, "\r", "", -1)
+	return html.EscapeString(escapedIp)
 }
 
 func GetHash(s string) (string, error) {
