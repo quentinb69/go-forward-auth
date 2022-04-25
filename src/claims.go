@@ -42,15 +42,18 @@ func CreateOrExtendClaims (w *http.ResponseWriter, creds *Credentials, ip string
 	tokenString, _ := token.SignedString(configuration.JwtKey)
 
 	// add or update cookie
-        http.SetCookie(*w, &http.Cookie{
-                Name:    configuration.CookieName,
-                Value:   tokenString,
-                Expires: expiresAt,
-		Domain:  configuration.CookieDomain,
-		Path:    "/",
-        })
+	http.SetCookie(*w, &http.Cookie{
+		Name:     configuration.CookieName,
+		Value:    tokenString,
+		Expires:  expiresAt,
+		Domain:   configuration.CookieDomain,
+		MaxAge:   int(configuration.Expire) * 60,
+		Secure:   configuration.Tls,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
 
-        return claims
+	return claims
 }
 
 // Get Claims from request

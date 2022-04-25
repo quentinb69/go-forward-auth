@@ -55,7 +55,10 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		Value:   "",
 		Expires: time.Now(),
 		Domain:  configuration.CookieDomain,
-		Path:    "/",
+		MaxAge:  -1,
+		Secure:   configuration.Tls,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	})
 
 	// return 200

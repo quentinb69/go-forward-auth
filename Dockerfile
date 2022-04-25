@@ -28,7 +28,7 @@ WORKDIR /opt/gfa
 #COPY --from=builder /app/go.* /tmp/
 COPY --from=builder /go-forward-auth ./gfa
 COPY default.config.yml ./
-COPY data/* ./data/
+COPY default.index.html ./
 
 COPY entrypoint.sh /usr/local/bin
 RUN chmod a+x /usr/local/bin/entrypoint.sh

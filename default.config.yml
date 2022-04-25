@@ -4,18 +4,18 @@ Tls: true
 PrivateKey: /opt/gfa/ssl/server.key
 Cert: /opt/gfa/ssl/server.crt
 
-Port: 44300
+Port: 443
 
 # Cookie and session configuration
 CookieDomain: "" # leave empty to disable sso
-CookieName: "_auth"
-Expire: 60 # minutes
+CookieName: "_auth_gfa"
+Expire: 120 # minutes
 
 # template file for login/out
-HtmlFile: /opt/gfa/data/index.html
+HtmlFile: /opt/gfa/default.index.html
 
 # key to sign jwt
-JwtKey: ""
+JwtKey: "secret"
 
 # number fo bcrypt iterations (default 10)
 HashCost: 10

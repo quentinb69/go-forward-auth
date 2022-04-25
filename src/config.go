@@ -48,6 +48,10 @@ func loadConfiguration() {
 		if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
 			log.Fatalf("Error loading configuration file: %v", err)
 		}
+	} else {
+		if err := k.Load(file.Provider("/opt/data/config.yml"), yaml.Parser()); err != nil {
+			log.Printf("Can't load configuration file: %v", err)
+                }
 	}
 
 	// load configuration in global var
