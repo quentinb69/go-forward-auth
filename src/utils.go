@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"html"
+	"crypto/rand"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -36,3 +37,9 @@ func IsValidHash(s string, h string) error {
 	return bcrypt.CompareHashAndPassword([]byte(h), []byte(s))
 }
 
+// generate random bytes
+func GenerateRand(s int) (*[]byte, error) {
+	ret := make([]byte, s)
+	_, err := rand.Read(ret)
+	return &ret, err
+}
