@@ -17,7 +17,8 @@ type config struct {
 	Port		int			`koanf:"Port"`
 	CookieDomain	string			`koanf:"CookieDomain"`
 	CookieName	string			`koanf:"CookieName"`
-	Expire		time.Duration		`koanf:"Expire"`
+	TokenExpire	time.Duration		`koanf:"TokenExpire"`
+	TokenRefresh	time.Duration		`koanf:"TokenRefresh"`
 	HtmlFile	string			`koanf:"HtmlFile"`
 	JwtKey		[]byte			`koanf:"JwtKey"`
 	HashCost	int			`koanf:"HashCost"`
@@ -60,6 +61,16 @@ func loadConfiguration() {
 	// load configuration in global configuration var
 	if err := k.Unmarshal("", &configuration); err != nil {
 		log.Fatalf("Error parsing configuration: %v", err)
+	}
+
+	// if weak secret provided, generate one
+	if len(configuration.JwtKey) < 32 {
+		log.Printf("JwtKey provided is too weak (%d), generating one...", len(configuration.JwtKey))
+		array, err := GenerateRand(64)
+		if err != nil {
+			log.Fatalf("Error generating JwtKey: %v", err)
+		}
+		configuration.JwtKey = *array
 	}
 
 	log.Printf("Configuration loaded from file: %s, %s", defaultConfigurationFile, configFile)

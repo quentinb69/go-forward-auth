@@ -1,24 +1,27 @@
 ---
+# Listen port
+Port: 443
+
 # HTTPS settings (Tls to false means HTTP)
 Tls: true
 PrivateKey: /opt/gfa/ssl/server.key
 Cert: /opt/gfa/ssl/server.crt
 
-Port: 443
-
 # Cookie and session configuration
 CookieDomain: "" # leave empty to disable sso
 CookieName: "_auth_gfa"
-Expire: 60 # minutes
+TokenExpire: 90 # jwt expiration delay minutes
+TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (0 to disable refresh)
 
 # template file for login/out
 HtmlFile: /opt/gfa/default.index.html
 
-# key to sign jwt
-JwtKey: "secret"
+# key to sign jwt. If not provided, will be generated
+JwtKey: ""
 
-# number fo bcrypt iterations (default 10)
+# number fo bcrypt iterations (default 10) (not used yet)
 HashCost: 10
+
 # list of users :
 #   - key is the user name
 #   - value is the bcrypt hash of the password (https://bcrypt.online/)

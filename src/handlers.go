@@ -123,8 +123,7 @@ func Home (w http.ResponseWriter, r *http.Request) {
 	}
 
 	// claims exists and need to be extended (<10% left time)
-	extendedTime := time.Minute*time.Duration(int(0.1*float64(int(configuration.Expire))))
-	if errClaims == nil && time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < extendedTime {
+	if errClaims == nil && time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < configuration.TokenRefresh {
 		log.Printf("Refresh claims for: %s", ip)
 		CreateOrExtendClaims(&w, credentials, ip, claims, cookie)
 		RenderTemplate(&w, claims, ip, 300, state)

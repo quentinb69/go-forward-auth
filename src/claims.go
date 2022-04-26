@@ -22,7 +22,7 @@ func (c Claims) isInvalidIp(ip string) bool {
 // Create or extend jwt duration
 func CreateOrExtendClaims (w *http.ResponseWriter, creds *Credentials, ip string, claims *Claims, cookie *http.Cookie ) *Claims {
 
-        expiresAt := time.Now().Add(configuration.Expire * time.Minute)
+        expiresAt := time.Now().Add(configuration.TokenExpire * time.Minute)
 
 	// update claims
 	if claims != nil {
@@ -55,7 +55,7 @@ func CreateOrExtendClaims (w *http.ResponseWriter, creds *Credentials, ip string
 		Value:    tokenString,
 		Expires:  expiresAt,
 		Domain:   configuration.CookieDomain,
-		MaxAge:   int(configuration.Expire) * 60,
+		MaxAge:   int(configuration.TokenExpire) * 60,
 		Secure:   configuration.Tls,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
