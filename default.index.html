@@ -113,7 +113,7 @@ body {
   form.addEventListener("submit", (e) => {
     const formData = new FormData(form);
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/", true);
+    xhr.open("POST", window.location, true);
     xhr.setRequestHeader("Auth-Form", new URLSearchParams(formData).toString());
     xhr.withCredentials = true;
     xhr.onload = (e) => {
