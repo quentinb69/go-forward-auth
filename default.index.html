@@ -109,6 +109,7 @@ body {
 <script>
   const form = document.getElementById("form");
   const error = document.getElementById("error");
+  // sent Form via XHR to send data via Header 
   form.addEventListener("submit", (e) => {
     const formData = new FormData(form);
     const xhr = new XMLHttpRequest();
@@ -117,10 +118,12 @@ body {
     xhr.withCredentials = true;
     xhr.onload = (e) => {
       if (xhr.status != 200 && (xhr.status < 300 || xhr.status >=400)) {
-    	error.innerHTML = "Error during login...";
+    	// Print error message
+	error.innerHTML = xhr.status + " - Error during login...";
 	form.reset();
       }
       else {
+	// Refresh
         window.location = window.location.href;
       }
     };

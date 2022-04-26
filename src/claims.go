@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 	"errors"
+	"fmt"
 
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -23,21 +24,28 @@ func CreateOrExtendClaims (w *http.ResponseWriter, creds *Credentials, ip string
 
         expiresAt := time.Now().Add(configuration.Expire * time.Minute)
 
-	// create claims or extends exitent
+	// update claims
 	if claims != nil {
 		claims.ExpiresAt = expiresAt.Unix()
-		claims.Ip = ip
+		claims.IssuedAt  = time.Now().Unix()
+		claims.NotBefore = time.Now().Unix()
+		claims.Ip       = ip
+	// create claims
 	} else {
 		claims = &Claims{
 			Username: creds.Username,
 			Ip: ip,
 			StandardClaims: jwt.StandardClaims{
 				ExpiresAt: expiresAt.Unix(),
+				Issuer:    "gfa",
+				Audience:  "https://"+configuration.CookieDomain,
+				IssuedAt:  time.Now().Unix(),
+				NotBefore: time.Now().Unix(),
 			},
 		}
 	}
 
-	// jwt token
+	// create jwt token and sign it
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, _ := token.SignedString(configuration.JwtKey)
 
@@ -66,13 +74,18 @@ func GetClaims (r *http.Request, ip string) (*Claims, *http.Cookie, error) {
         if err != nil {
                 return nil, cookie, err
         }
-
         tokenString := cookie.Value
+
+	// parse jwt to Claims
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+		// validate alg
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+		}
 		return configuration.JwtKey, nil
 	})
 
-        if !token.Valid {
+        if err != nil || !token.Valid {
                 return claims, cookie, errors.New("Invalid Jwt")
         }
         if err != nil {

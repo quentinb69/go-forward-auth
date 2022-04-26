@@ -105,6 +105,7 @@ func Home (w http.ResponseWriter, r *http.Request) {
 		log.Printf("Failed attempt for: %s", ip)
 		log.Printf("Claims error: %v", errClaims)
 		log.Printf("Credentials error: %v", errCredentials)
+		// fake waiting time to limit brute force
 		time.Sleep(500 * time.Millisecond)
 		RenderTemplate(&w, claims, ip, http.StatusUnauthorized, state)
 		return
@@ -121,8 +122,9 @@ func Home (w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// claims exists and need to be extended
-	if errClaims == nil && time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 1*time.Minute {
+	// claims exists and need to be extended (<10% left time)
+	extendedTime := time.Minute*time.Duration(int(0.1*float64(int(configuration.Expire))))
+	if errClaims == nil && time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < extendedTime {
 		log.Printf("Refresh claims for: %s", ip)
 		CreateOrExtendClaims(&w, credentials, ip, claims, cookie)
 		RenderTemplate(&w, claims, ip, 300, state)

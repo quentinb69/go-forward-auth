@@ -25,13 +25,13 @@ type config struct {
 }
 
 const defaultConfigurationFile = "default.config.yml"
-
-var k = koanf.New(".")
+const arbitraryDefinedConfigFile = "/opt/data/config.yml"
 var configuration config
 
 func loadConfiguration() {
 
 	// read configuration file from command line
+	var k = koanf.New(".")
 	var configFile string
 	var debug bool
 	flag.StringVar(&configFile, "conf", "", "Link configuration file.")
@@ -43,29 +43,31 @@ func loadConfiguration() {
 	        log.Fatalf("Error loading default configuration: %v", err)
         }
 
-	// read configuration from file
+	// read configuration from file.
+	// If file is flag is supplied by flag load it, if not load defined arbitrary path
 	if configFile != "" {
 		if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
+			// error in supplied file, so bloking error
 			log.Fatalf("Error loading configuration file: %v", err)
 		}
 	} else {
-		if err := k.Load(file.Provider("/opt/data/config.yml"), yaml.Parser()); err != nil {
+		if err := k.Load(file.Provider(arbitraryDefinedConfigFile), yaml.Parser()); err != nil {
+			// error in arbitrary path file, so non-bloking error
 			log.Printf("Can't load configuration file: %v", err)
                 }
 	}
 
-	// load configuration in global var
+	// load configuration in global configuration var
 	if err := k.Unmarshal("", &configuration); err != nil {
 		log.Fatalf("Error parsing configuration: %v", err)
 	}
 
 	log.Printf("Configuration loaded from file: %s, %s", defaultConfigurationFile, configFile)
 
+	// print configuration values
 	if debug {
-		log.Printf("Configuration from file: %v", k)
-		log.Printf("Remplacing CookieDomain")
-		configuration.CookieDomain=""
-		log.Printf("Configuration loaded: %v", configuration)
+		log.Printf("Configuration read: %v", k)
+		log.Printf("Configuration parsed: %v", configuration)
 	}
 
 	return

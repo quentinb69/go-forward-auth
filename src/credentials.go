@@ -26,13 +26,15 @@ func (c Credentials) isValid() error {
 		return errors.New("No user available")
 	}
 
-	// Get the expected password
+	// Get the expected password from user name (hashed)
 	expectedPassword, ok := configuration.Users[c.Username]
 
         // if password differs
         if !ok {
                 return errors.New("No password for user")
         }
+
+	// compare hashes
 	return IsValidHash(c.Password, expectedPassword)
 }
 

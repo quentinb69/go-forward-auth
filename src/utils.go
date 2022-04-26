@@ -20,7 +20,7 @@ func GetIp(r *http.Request) string {
         }
         // if multiple ips, get the first
         ip = strings.Split(ip, ":")[0]
-	//sanitize
+	// sanitize
 	escapedIp := strings.Replace(ip, "\n", "", -1)
 	escapedIp = strings.Replace(ip, "\r", "", -1)
 	return html.EscapeString(escapedIp)
