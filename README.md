@@ -1,10 +1,11 @@
+# GFA - go-forward-auth
 Lightweight GO server acting as a "forward-auth" middleware (in Traefik for instance).
 
-Inspired by https://github.com/sohamkamani/go-session-auth-example many thanks to him.
+Inspired by [sohamkamani's tuto](https://github.com/sohamkamani/go-session-auth-example) many thanks to him.
 
 Use at your own risk, not yet secured. Feel free to PR/Issue if you detect security issues :)
 
-Endpoints :
+## Endpoints :
 - / for html rendering and forward-auth url 
   - return 401 and a "Login page" if no valid JWT and invalid credentials supplied
   - return 300 if no valid JWT and valid credentials supplied (means you logged-in succesfully)
@@ -18,7 +19,7 @@ Endpoints :
 
 To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarded to middlewares by Traefik)
 
-WIP
+## WIP
 - ~~jwt instead of cookie and session~~
 - ~~password saved as hash using bcrypt~~
 - ~~ssl with selfsigned cert~~
@@ -30,3 +31,13 @@ WIP
 - automatic test
 - real documentation
 - reacto for clean code
+
+## SCREENSHOT
+The following screenshot shows the default login page.
+![GFA](login-screenshot.png)
+
+## RELEASE
+Available as a docker image : [quentinb69/go-forward-auth](https://hub.docker.com/r/quentinb69/go-forward-auth)
+
+## LICENSE
+The source code and binaries of GFA is subject to the [MIT License]().
