@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-APP_NAME=gaf
+APP_NAME=gfa
 WORKING_DIR=/opt/${APP_NAME}
 SSL_FOLDER=${WORKING_DIR}/ssl
 
