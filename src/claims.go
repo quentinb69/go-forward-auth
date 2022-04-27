@@ -20,7 +20,7 @@ func (c Claims) isInvalidIp(ip string) bool {
 }
 
 // Create or extend jwt duration
-func CreateOrExtendClaims (w *http.ResponseWriter, creds *Credentials, ip string, claims *Claims, cookie *http.Cookie ) *Claims {
+func CreateOrExtendJwt (w *http.ResponseWriter, creds *Credentials, ip string, claims *Claims, cookie *http.Cookie ) *Claims {
 
         expiresAt := time.Now().Add(configuration.TokenExpire * time.Minute)
 
@@ -80,19 +80,19 @@ func GetClaims (r *http.Request, ip string) (*Claims, *http.Cookie, error) {
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		// validate alg
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("Claims : Unexpected signing method: %v", token.Header["alg"])
 		}
 		return configuration.JwtKey, nil
 	})
 
         if err != nil || !token.Valid {
-                return claims, cookie, errors.New("Invalid Jwt")
+                return claims, cookie, errors.New("Claims : Invalid Jwt")
         }
         if err != nil {
                 return claims, cookie, err
         }
         if claims.isInvalidIp(ip) {
-                return claims, cookie, errors.New("Invalid IP from claims")
+                return claims, cookie, errors.New("Claims : Invalid IP from claims")
         }
 
         return claims, cookie, nil

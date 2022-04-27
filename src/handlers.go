@@ -42,8 +42,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	// return 401
 	if err != nil {
-		log.Printf("Failed attempt for: %s", ip)
-		log.Printf("Claims error: %s", err)
+		log.Printf("Failed attempt for: %s - %v", ip, err)
 		time.Sleep(500 * time.Millisecond)
 		http.Redirect(w, r, "/", 302)
 		return
@@ -77,14 +76,13 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// return 401
 	if err != nil {
-		log.Printf("Failed attempt for: %s", ip)
-		log.Printf("Credentials error: %s", err)
+		log.Printf("Failed attempt for: %s - %v", ip, err)
 		time.Sleep(500 * time.Millisecond)
 		http.Redirect(w, r, "/", 302)
 		return
 	}
 
-        CreateOrExtendClaims(&w, credentials, ip, nil, nil)
+        CreateOrExtendJwt(&w, credentials, ip, nil, nil)
 
 	// return 200
 	log.Printf("Login for: %s", ip)
@@ -102,9 +100,7 @@ func Home (w http.ResponseWriter, r *http.Request) {
 
 	// no valid claims and no credentials submitted
 	if errClaims != nil && errCredentials != nil {
-		log.Printf("Failed attempt for: %s", ip)
-		log.Printf("Claims error: %v", errClaims)
-		log.Printf("Credentials error: %v", errCredentials)
+		log.Printf("Failed attempt for: %s - %v - %v", ip, errClaims, errCredentials)
 		// fake waiting time to limit brute force
 		time.Sleep(500 * time.Millisecond)
 		RenderTemplate(&w, claims, ip, http.StatusUnauthorized, state)
@@ -116,16 +112,16 @@ func Home (w http.ResponseWriter, r *http.Request) {
 
 	// credentials supplied
 	if errCredentials == nil {
-		log.Printf("Create claims for: %s", ip)
-		CreateOrExtendClaims(&w, credentials, ip, claims, cookie)
+		log.Printf("Create Jwt for: %s", ip)
+		CreateOrExtendJwt(&w, credentials, ip, claims, cookie)
 		RenderTemplate(&w, claims, ip, 300, state)
 		return
 	}
 
 	// claims exists and need to be extended (<10% left time)
 	if errClaims == nil && time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < configuration.TokenRefresh {
-		log.Printf("Refresh claims for: %s", ip)
-		CreateOrExtendClaims(&w, credentials, ip, claims, cookie)
+		log.Printf("Refresh Jwt for: %s", ip)
+		CreateOrExtendJwt(&w, credentials, ip, claims, cookie)
 		RenderTemplate(&w, claims, ip, 300, state)
 		return
 	}
