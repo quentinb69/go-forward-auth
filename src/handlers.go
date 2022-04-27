@@ -18,6 +18,8 @@ func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode
 	// Login ok
 	if claims != nil {
 		data["username"] = claims.Username
+		// return loggedin user ie header
+		(*w).Header().Add("Remote-User", claims.Username)
 	}
 
 	// load template
