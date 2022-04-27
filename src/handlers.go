@@ -35,18 +35,18 @@ func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode
 }
 
 // LOGOUT HANDLER
-// return 302 if not logged in
-// return 200 if diconnected
+// return 401 if not logged in
+// return 302 if diconnected
 func Logout(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
 	_, _, err := GetClaims (r, ip)
 
-	// return 401
+	// return on error
 	if err != nil {
 		log.Printf("Failed attempt for: %s - %v", ip, err)
 		time.Sleep(500 * time.Millisecond)
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, "/", 401)
 		return
 	}
 
@@ -62,9 +62,9 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	// return 200
+	// return if disconnected
 	log.Printf("Logout for: %s", ip)
-	http.Redirect(w, r, "/", http.StatusOK)
+	http.Redirect(w, r, "/", 302)
 	return
 }
 
@@ -76,19 +76,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	ip := GetIp(r)
 	credentials, err := GetCredentials (r)
 
-	// return 401
+	// return on error
 	if err != nil {
 		log.Printf("Failed attempt for: %s - %v", ip, err)
 		time.Sleep(500 * time.Millisecond)
-		http.Redirect(w, r, "/", 302)
+		http.Redirect(w, r, "/", 401)
 		return
 	}
 
         CreateOrExtendJwt(&w, credentials, ip, nil, nil)
 
-	// return 200
+	// return if connected
 	log.Printf("Login for: %s", ip)
-	http.Redirect(w, r, "/", http.StatusOK)
+	http.Redirect(w, r, "/", 302)
         return
 }
 

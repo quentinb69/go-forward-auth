@@ -15,7 +15,7 @@ type Claims struct {
 	jwt.StandardClaims
 }
 
-func (c Claims) isInvalidIp(ip string) bool {
+func (c Claims) IsInvalidIp(ip string) bool {
         return c.Ip != ip
 }
 
@@ -91,7 +91,7 @@ func GetClaims (r *http.Request, ip string) (*Claims, *http.Cookie, error) {
         if err != nil {
                 return claims, cookie, err
         }
-        if claims.isInvalidIp(ip) {
+        if claims.IsInvalidIp(ip) {
                 return claims, cookie, errors.New("Claims : Invalid IP from claims")
         }
 
