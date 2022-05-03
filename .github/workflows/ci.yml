@@ -1,17 +1,13 @@
-name: ci
+name: Ci
 
 on:
-  push:
-    branches:
-      - 'main'
-    tags:
-      - 'v*'
   pull_request:
-    branches:
-      - 'main'
+    branches: [ main ]
+  push:
+    branches: [ main ]
+    tags: [ v* ]
 
 jobs:
-
   docker:
     runs-on: ubuntu-latest
     steps:
