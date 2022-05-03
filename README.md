@@ -25,9 +25,9 @@ To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarde
 - ~~ssl with selfsigned cert~~
 - ~~choose config file from flag~~
 - ~~automatic image push on docker hub (quentinb69/go-forward-auth)~~
+- ~~pass header value such as username when valid JWT~~
 - use actions and CSRF ? (not sure if needed)
 - help tool for bcrypt
-- pass header value such as username when valid JWT
 - automatic test
 - real documentation
 - reacto for clean code
@@ -39,5 +39,9 @@ The following screenshot shows the default login page.
 ## RELEASE
 Available as a docker image : [quentinb69/go-forward-auth](https://hub.docker.com/r/quentinb69/go-forward-auth)
 
+## DevOnline
+- [Google Cloud Shell](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/quentinb69/go-forward-auth.git)
+- [Github.dev](https://github.dev/quentinb69/go-forward-auth/)
+
 ## LICENSE
-The source code and binaries of GFA is subject to the [MIT License]().
+The source code and binaries of GFA is subject to the MIT License.
