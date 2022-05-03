@@ -35,7 +35,7 @@ firstChar=${firstParameter:0:1}
 # if first char is an argument (start with "-") 
 # OR first parameter is the executable "gfa"
 # THEN generate certificates and start GFA
-if [ "$firstChar" = "-" ] || [ "$firstParameter" = "${WORKING_DIR}/${APP_NAME}" ]; then
+if [ "$firstChar" = "-" ] || [ "$firstParameter" = "" ]; then
 	generateCertificates
 	exec ${WORKING_DIR}/${APP_NAME} "$@"
 fi
