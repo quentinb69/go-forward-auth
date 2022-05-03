@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-	"strconv"
+	"fmt"
 )
 
 func main() {
@@ -17,7 +17,7 @@ func main() {
 	log.Printf("Loading server on port %d... (TLS connection is set to %t)", configuration.Port, configuration.Tls)
 
 	// transform PORT from int to string like ":<port>"
-	var port = ":"+strconv.Itoa(configuration.Port)
+	var port = ":"+fmt.Sprint(configuration.Port)
 	if ! configuration.Tls {
 		log.Fatal(http.ListenAndServe(port, nil))
 	} else {

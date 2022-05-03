@@ -9,22 +9,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+func SanitizeIp(ip string) string {
+        ip = strings.Replace(ip, "\n", "", -1)
+        ip = strings.Replace(ip, "\r", "", -1)
+        ip = strings.Replace(ip, " ", "", -1)
+        return html.EscapeString(ip)
+}
+
 // get user ip
 func GetIp(r *http.Request) string {
 
-        ip := r.Header.Get("X-Real-IP")
+        ip := SanitizeIp(r.Header.Get("X-Real-IP"))
         if ip == "" {
-                ip = r.Header.Get("X-Forwarded-For")
+                ip = SanitizeIp(r.Header.Get("X-Forwarded-For"))
         }
         if ip == "" {
-                ip = r.RemoteAddr
+                ip = SanitizeIp(r.RemoteAddr)
         }
         // if multiple ips, get the first
-        ip = strings.Split(ip, ":")[0]
-	// sanitize
-	escapedIp := strings.Replace(ip, "\n", "", -1)
-	escapedIp = strings.Replace(ip, "\r", "", -1)
-	return html.EscapeString(escapedIp)
+        ip = strings.Split(ip, ",")[0]
+        // extact IP from <ip>:<port>
+	ip = strings.Split(ip, ":")[0]
+	return ip
 }
 
 func GetHash(s string) (string, error) {
@@ -38,7 +44,7 @@ func IsValidHash(s string, h string) error {
 }
 
 // generate random bytes
-func GenerateRand(s int) (*[]byte, error) {
+func GenerateRand(s uint) (*[]byte, error) {
 	ret := make([]byte, s)
 	_, err := rand.Read(ret)
 	return &ret, err
