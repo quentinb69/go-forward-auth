@@ -26,7 +26,7 @@ jobs:
         images: |
           ${{ secrets.DOCKER_HUB_USERNAME }}/go-forward-auth
         tags: |
-          type=edge,branch=${{ repo.default_branch }}
+          type=edge,branch=$repo.default_branch
           type=ref,event=pr,prefix=beta-
           type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}.{{patch}}

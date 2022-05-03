@@ -40,8 +40,8 @@ The following screenshot shows the default login page.
 Available as a docker image : [quentinb69/go-forward-auth](https://hub.docker.com/r/quentinb69/go-forward-auth)
 
 ## DevOnline
-[Google Cloud Shell](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/quentinb69/go-forward-auth.git)
-[Github.dev](https://github.dev/quentinb69/go-forward-auth/)
+- [Google Cloud Shell](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/quentinb69/go-forward-auth.git)
+- [Github.dev](https://github.dev/quentinb69/go-forward-auth/)
 
 ## LICENSE
 The source code and binaries of GFA is subject to the MIT License.
