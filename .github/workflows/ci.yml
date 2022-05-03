@@ -24,11 +24,10 @@ jobs:
       uses: docker/metadata-action@v3
       with:
         images: |
-          ${{ secrets.DOCKER_HUB_USERNAME }}/go-forward-auth
+          quentinb69/go-forward-auth
         tags: |
-          type=edge,branch=$repo.default_branch
+          type=edge,branch=main
           type=ref,event=pr,prefix=beta-
-          type=semver,pattern={{version}}
           type=semver,pattern={{major}}.{{minor}}.{{patch}}
     - 
       name: Setup Qemu
