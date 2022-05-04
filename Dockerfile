@@ -24,4 +24,4 @@ RUN adduser -D gfa && chown -R gfa:gfa .
 USER gfa:gfa
 
 ENTRYPOINT [ "entrypoint.sh" ]
-CMD [ "/opt/gfa/gfa" ]
+
