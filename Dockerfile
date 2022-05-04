@@ -2,7 +2,7 @@ FROM golang:1.18-alpine AS builder
 
 WORKDIR /app
 COPY go.* ./
-COPY src/*.go ./
+COPY *.go ./
 RUN go build -o /go-forward-auth
 
 
