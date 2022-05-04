@@ -5,7 +5,7 @@ Inspired by [sohamkamani's tuto](https://github.com/sohamkamani/go-session-auth-
 
 Use at your own risk, not yet secured. Feel free to PR/Issue if you detect security issues :)
 
-## Endpoints :
+## Endpoints
 - / for html rendering and forward-auth url 
   - return 401 and a "Login page" if no valid JWT and invalid credentials supplied
   - return 300 if no valid JWT and valid credentials supplied (means you logged-in succesfully)
@@ -32,16 +32,16 @@ To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarde
 - real documentation
 - reacto for clean code
 
-## SCREENSHOT
+## Screenshot
 The following screenshot shows the default login page.
 ![GFA](login-screenshot.png)
 
-## RELEASE
+## Release
 Available as a docker image : [quentinb69/go-forward-auth](https://hub.docker.com/r/quentinb69/go-forward-auth)
 
-## DevOnline
+## Devonline
 - [Google Cloud Shell](https://shell.cloud.google.com/cloudshell/editor?cloudshell_git_repo=https://github.com/quentinb69/go-forward-auth.git)
 - [Github.dev](https://github.dev/quentinb69/go-forward-auth/)
 
-## LICENSE
+## License
 The source code and binaries of GFA is subject to the MIT License.
