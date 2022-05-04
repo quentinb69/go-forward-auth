@@ -2,12 +2,34 @@ package main
 
 import (
         "testing"
+	"net/http"
 )
 
 // get user ip
 func TestGetIp(t *testing.T) {
         t.Log("TestGetIp")
-        //t.Fail()
+	req, _ := http.NewRequest("POST", "http://localhost", nil)
+
+	expectedIp := "3.3.3.3"
+	ip := GetIp(req)
+	req.RemoteAddr = expectedIp+":123456"
+	if ip != expectedIp {
+		t.Errorf("Error validating IP, want %v, got %v", expectedIp, ip)
+	}
+	expectedIp = "2.2.2.2"
+	req.Header.Set("X-Forwarded-For", expectedIp+":123456, 9.9.9.9, 8.7.6.8:1235")
+	ip = GetIp(req)
+	if ip != expectedIp {
+		t.Errorf("Error validating IP, want %v, got %v", expectedIp, ip)
+	}
+
+	expectedIp="3.3.3.3"
+	req.Header.Add("X-Real-IP", expectedIp)
+t.Errorf("%v", req)
+	ip = GetIp(req)
+	if ip != expectedIp {
+		t.Errorf("Error validating IP, want %v, got %v", expectedIp, ip)
+	}
 }
 
 func TestIsValidHash(t *testing.T) {
@@ -41,8 +63,16 @@ func TestGetHash(t *testing.T) {
         }
 }
 
-// generate random bytes
 func TestGenerateRand(t *testing.T) {
         t.Log("TestGenerateRand")
-        //t.Fail()
+	cases := []uint { 5, 10, 99, 0 }
+	for _, cas := range cases {
+		n, err := GenerateRand(cas)
+		if cas < 0 && err == nil {
+			t.Errorf("Error Generating random, want error for %v", cas)
+		} else if len(*n) != int(cas) {
+			t.Errorf("Error Generating random, want %v, got %v", cas, len(*n))
+		}
+	}
+
 }

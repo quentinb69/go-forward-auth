@@ -14,7 +14,7 @@ type config struct {
 	Tls		bool			`koanf:"Tls"`
 	PrivateKey	string			`koanf:"PrivateKey"`
 	Cert		string			`koanf:"Cert"`
-	Port		int			`koanf:"Port"`
+	Port		uint			`koanf:"Port"`
 	CookieDomain	string			`koanf:"CookieDomain"`
 	CookieName	string			`koanf:"CookieName"`
 	TokenExpire	time.Duration		`koanf:"TokenExpire"`

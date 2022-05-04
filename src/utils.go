@@ -38,7 +38,7 @@ func IsValidHash(s string, h string) error {
 }
 
 // generate random bytes
-func GenerateRand(s int) (*[]byte, error) {
+func GenerateRand(s uint) (*[]byte, error) {
 	ret := make([]byte, s)
 	_, err := rand.Read(ret)
 	return &ret, err
