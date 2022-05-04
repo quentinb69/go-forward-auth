@@ -1,9 +1,9 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"time"
-	"flag"
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
@@ -11,22 +11,23 @@ import (
 )
 
 type config struct {
-	Tls		bool			`koanf:"Tls"`
-	PrivateKey	string			`koanf:"PrivateKey"`
-	Cert		string			`koanf:"Cert"`
-	Port		uint			`koanf:"Port"`
-	CookieDomain	string			`koanf:"CookieDomain"`
-	CookieName	string			`koanf:"CookieName"`
-	TokenExpire	time.Duration		`koanf:"TokenExpire"`
-	TokenRefresh	time.Duration		`koanf:"TokenRefresh"`
-	HtmlFile	string			`koanf:"HtmlFile"`
-	JwtKey		[]byte			`koanf:"JwtKey"`
-	HashCost	int			`koanf:"HashCost"`
-	Users		map[string]string	`koanf:"Users"`
+	Tls          bool              `koanf:"Tls"`
+	PrivateKey   string            `koanf:"PrivateKey"`
+	Cert         string            `koanf:"Cert"`
+	Port         uint              `koanf:"Port"`
+	CookieDomain string            `koanf:"CookieDomain"`
+	CookieName   string            `koanf:"CookieName"`
+	TokenExpire  time.Duration     `koanf:"TokenExpire"`
+	TokenRefresh time.Duration     `koanf:"TokenRefresh"`
+	HtmlFile     string            `koanf:"HtmlFile"`
+	JwtKey       []byte            `koanf:"JwtKey"`
+	HashCost     int               `koanf:"HashCost"`
+	Users        map[string]string `koanf:"Users"`
 }
 
 const defaultConfigurationFile = "default.config.yml"
 const arbitraryDefinedConfigFile = "/opt/data/config.yml"
+
 var configuration config
 
 func loadConfiguration() {
@@ -40,9 +41,9 @@ func loadConfiguration() {
 	flag.Parse()
 
 	// default configuration
-	if err :=  k.Load(file.Provider(defaultConfigurationFile), yaml.Parser()); err != nil {
-	        log.Fatalf("Error loading default configuration: %v", err)
-        }
+	if err := k.Load(file.Provider(defaultConfigurationFile), yaml.Parser()); err != nil {
+		log.Fatalf("Error loading default configuration: %v", err)
+	}
 
 	// read configuration from file.
 	// If file is flag is supplied by flag load it, if not load defined arbitrary path
@@ -55,7 +56,7 @@ func loadConfiguration() {
 		if err := k.Load(file.Provider(arbitraryDefinedConfigFile), yaml.Parser()); err != nil {
 			// error in arbitrary path file, so non-bloking error
 			log.Printf("Can't load configuration file: %v", err)
-                }
+		}
 	}
 
 	// load configuration in global configuration var

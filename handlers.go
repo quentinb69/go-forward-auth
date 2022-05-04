@@ -1,14 +1,14 @@
 package main
 
 import (
-	"net/http"
 	"html/template"
-	"time"
 	"log"
+	"net/http"
+	"time"
 )
 
 // Return HTML
-func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode int, state string) {
+func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode int, state string) {
 
 	data := make(map[string]string)
 	data["ip"] = ip
@@ -28,7 +28,7 @@ func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode
 	(*w).WriteHeader(httpCode)
 	err := parsedTemplate.Execute(*w, data)
 	if err != nil {
-		panic (err)
+		panic(err)
 	}
 
 	return
@@ -40,7 +40,7 @@ func RenderTemplate (w *http.ResponseWriter, claims *Claims, ip string, httpCode
 func Logout(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
-	_, _, err := GetClaims (r, ip)
+	_, _, err := GetClaims(r, ip)
 
 	// return on error
 	if err != nil {
@@ -52,11 +52,11 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	// remove cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:    configuration.CookieName,
-		Value:   "",
-		Expires: time.Now(),
-		Domain:  configuration.CookieDomain,
-		MaxAge:  -1,
+		Name:     configuration.CookieName,
+		Value:    "",
+		Expires:  time.Now(),
+		Domain:   configuration.CookieDomain,
+		MaxAge:   -1,
 		Secure:   configuration.Tls,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
@@ -74,7 +74,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func Login(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
-	credentials, err := GetCredentials (r)
+	credentials, err := GetCredentials(r)
 
 	// return on error
 	if err != nil {
@@ -84,21 +84,21 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-        CreateOrExtendJwt(&w, credentials, ip, nil, nil)
+	CreateOrExtendJwt(&w, credentials, ip, nil, nil)
 
 	// return if connected
 	log.Printf("Login for: %s", ip)
 	http.Redirect(w, r, "/", 302)
-        return
+	return
 }
 
 // DEFAULT HANDLER
-func Home (w http.ResponseWriter, r *http.Request) {
+func Home(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
-	claims, cookie, errClaims := GetClaims (r, ip)
-	credentials, errCredentials := GetCredentials (r)
-        state:= "out"
+	claims, cookie, errClaims := GetClaims(r, ip)
+	credentials, errCredentials := GetCredentials(r)
+	state := "out"
 
 	// no valid claims and no credentials submitted
 	if errClaims != nil && errCredentials != nil {
