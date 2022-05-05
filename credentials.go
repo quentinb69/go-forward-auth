@@ -43,7 +43,7 @@ func GetCredentials(r *http.Request) (*Credentials, error) {
 
 	creds, err := GetCredentialsFromHeader(r)
 	if err != nil {
-		log.Printf("Getting Credentials from Form, %s, %v", err, creds)
+		log.Printf("Getting Credentials from Form. %s", err)
 		creds, err = GetCredentialsFromForm(r)
 		// no creds supplied
 		if err != nil {
