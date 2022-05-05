@@ -26,9 +26,10 @@ To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarde
 - ~~choose config file from flag~~
 - ~~automatic image push on docker hub (quentinb69/go-forward-auth)~~
 - ~~pass header value such as username when valid JWT~~
+- ~~automatic test~~
+- automatic lint (gofmt, etc...)
 - use actions and CSRF ? (not sure if needed)
 - help tool for bcrypt
-- automatic test
 - real documentation
 - reacto for clean code
 
