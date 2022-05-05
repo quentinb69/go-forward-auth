@@ -43,11 +43,11 @@ func GetCredentials(r *http.Request) (*Credentials, error) {
 
 	creds, err := GetCredentialsFromHeader(r)
 	if err != nil {
-		log.Printf("Get Credentials from POST, %s", err)
-		creds, err = GetCredentialsFromPost(r)
+		log.Printf("Getting Credentials from Form, %s, %v", err, creds)
+		creds, err = GetCredentialsFromForm(r)
 		// no creds supplied
 		if err != nil {
-			return creds, err
+			return nil, err
 		}
 	}
 
@@ -57,16 +57,22 @@ func GetCredentials(r *http.Request) (*Credentials, error) {
 }
 
 // Extract Credentials from POST
-func GetCredentialsFromPost(r *http.Request) (*Credentials, error) {
+func GetCredentialsFromForm(r *http.Request) (*Credentials, error) {
 
-	creds := &Credentials{}
+	if r.Method != http.MethodPost {
+		return nil, errors.New("Credentials : You must send data via POST")
+	}
 
 	err := r.ParseForm()
 	if err != nil {
 		return nil, err
 	}
+	if r.Form.Get("username") == "" {
+		return nil, errors.New("Credentials : No username found in Form")
+	}
 
 	// Get the body and decode into credentials
+	creds := &Credentials{}
 	err = decoder.Decode(creds, r.Form)
 	return creds, err
 }
@@ -74,14 +80,15 @@ func GetCredentialsFromPost(r *http.Request) (*Credentials, error) {
 // Extract Credentials from HEADER
 func GetCredentialsFromHeader(r *http.Request) (*Credentials, error) {
 
-	creds := &Credentials{}
-
 	// Get value from "Auth-Form" Header
 	urlCreds, err := url.ParseQuery(r.Header.Get("Auth-Form"))
 	if err != nil {
 		return nil, err
 	}
-
+	if urlCreds.Get("username") == "" {
+		return nil, errors.New("Credentials : No username found in Header")
+	}
+	creds := &Credentials{}
 	err = decoder.Decode(creds, urlCreds)
 	return creds, err
 }

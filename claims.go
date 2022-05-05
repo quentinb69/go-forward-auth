@@ -78,8 +78,6 @@ func GetClaims(r *http.Request, ip string) (*Claims, *http.Cookie, error) {
 		return nil, nil, errors.New("Claims : Invalid Request")
 	}
 
-	claims := &Claims{}
-
 	// get token
 	cookie, err := r.Cookie(configuration.CookieName)
 	if err != nil {
@@ -88,6 +86,7 @@ func GetClaims(r *http.Request, ip string) (*Claims, *http.Cookie, error) {
 	tokenString := cookie.Value
 
 	// parse jwt to Claims
+	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		// validate alg
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
