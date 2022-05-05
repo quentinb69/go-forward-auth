@@ -1,3 +1,4 @@
+---
 name: Ci
 
 on: [push, pull_request]
