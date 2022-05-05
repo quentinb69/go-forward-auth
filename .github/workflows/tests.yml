@@ -7,6 +7,7 @@ on:
 
 jobs:
   tests:
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       - 
@@ -15,6 +16,8 @@ jobs:
       - 
         name: Setup Go
         uses: actions/setup-go@v2
+        with:
+          go-version: 1.18
       - 
-        name: Tests
-        uses: n8maninger/action-golang-test@v1
+        name: Test
+        run: go test -v ./... -cover
