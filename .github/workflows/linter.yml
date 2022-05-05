@@ -27,4 +27,3 @@ jobs:
         env:
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: main
-diff --git a/README.md b/README.md
