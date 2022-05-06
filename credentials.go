@@ -9,9 +9,10 @@ import (
 	"github.com/gorilla/schema"
 )
 
-// global
+// Parse http request to a Credentials struct
 var decoder = schema.NewDecoder()
 
+// Action and Csrf not used...
 type Credentials struct {
 	Password string `schema: password,required`
 	Username string `schema: username,required`
@@ -19,9 +20,11 @@ type Credentials struct {
 	Csrf     string `schema: csrf,required`
 }
 
+// Validate credentials against user list supplied in configuration file
+// return an error if no user configured, or if password is empty, or if password do not match
 func (c Credentials) IsValid() error {
 
-	// if user list is empty
+	// If user list is empty
 	if configuration.Users == nil || len(configuration.Users) == 0 {
 		return errors.New("Credentials : No user available")
 	}
@@ -34,11 +37,12 @@ func (c Credentials) IsValid() error {
 		return errors.New("Credentials : No password supplied for user")
 	}
 
-	// compare hashes
+	// Compare hashes
 	return IsValidHash(c.Password, expectedPassword)
 }
 
-// Wrapper to get Credentials form POST or HEADER
+// Extract Credentials from request HEADER or BODY
+// return an error if credentials are invalid or inexistant
 func GetCredentials(r *http.Request) (*Credentials, error) {
 
 	creds, err := GetCredentialsFromHeader(r)
@@ -51,12 +55,13 @@ func GetCredentials(r *http.Request) (*Credentials, error) {
 		}
 	}
 
-	// check if creds are valid
+	// Check if creds are valid
 	err = creds.IsValid()
 	return creds, err
 }
 
-// Extract Credentials from POST
+// Extract Credentials from request BODY
+// return an error if method other than POST, or no crendentials data found
 func GetCredentialsFromForm(r *http.Request) (*Credentials, error) {
 
 	if r.Method != http.MethodPost {
@@ -64,9 +69,11 @@ func GetCredentialsFromForm(r *http.Request) (*Credentials, error) {
 	}
 
 	err := r.ParseForm()
+
 	if err != nil {
 		return nil, err
 	}
+
 	if r.Form.Get("username") == "" {
 		return nil, errors.New("Credentials : No username found in Form")
 	}
@@ -77,17 +84,21 @@ func GetCredentialsFromForm(r *http.Request) (*Credentials, error) {
 	return creds, err
 }
 
-// Extract Credentials from HEADER
+// Extract Credentials from request HEADER
+// return an error if no header "Auth-Form", or no crendentials data found
 func GetCredentialsFromHeader(r *http.Request) (*Credentials, error) {
 
 	// Get value from "Auth-Form" Header
 	urlCreds, err := url.ParseQuery(r.Header.Get("Auth-Form"))
+
 	if err != nil {
 		return nil, err
 	}
+
 	if urlCreds.Get("username") == "" {
 		return nil, errors.New("Credentials : No username found in Header")
 	}
+
 	creds := &Credentials{}
 	err = decoder.Decode(creds, urlCreds)
 	return creds, err

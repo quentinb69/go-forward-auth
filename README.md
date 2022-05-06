@@ -1,4 +1,9 @@
 # GFA - go-forward-auth
+
+[![Ci](https://github.com/quentinb69/go-forward-auth/actions/workflows/ci.yml/badge.svg)](https://github.com/quentinb69/go-forward-auth/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/quentinb69/go-forward-auth/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/quentinb69/go-forward-auth/actions/workflows/codeql-analysis.yml)
+[![Docker](https://github.com/quentinb69/go-forward-auth/actions/workflows/docker.yml/badge.svg)](https://github.com/quentinb69/go-forward-auth/actions/workflows/docker.yml)
+
 Lightweight GO server acting as a "forward-auth" middleware (in Traefik for instance).
 
 Inspired by [sohamkamani's tuto](https://github.com/sohamkamani/go-session-auth-example) many thanks to him.
@@ -9,7 +14,7 @@ Use at your own risk, not yet secured. Feel free to PR/Issue if you detect secur
 - / for html rendering and forward-auth url 
   - return 401 and a "Login page" if no valid JWT and invalid credentials supplied
   - return 300 if no valid JWT and valid credentials supplied (means you logged-in succesfully)
-  - return 200 and a "Welcome <user> page" if valid JWT
+  - return 200 and a "Welcome page" if valid JWT
 - /logout to logout
   - return 401 if invalid JWT
   - return 200 if valid JWT
@@ -35,6 +40,7 @@ To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarde
 
 ## Screenshot
 The following screenshot shows the default login page.
+
 ![GFA](login-screenshot.png)
 
 ## Release
