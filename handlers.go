@@ -1,14 +1,19 @@
 package main
 
 import (
+	"errors"
 	"html/template"
 	"log"
 	"net/http"
 	"time"
 )
 
-// Return HTML
-func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode int, state string) {
+// Render HTML passed in configuration
+func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode int, state string) error {
+
+	if *w == nil {
+		return errors.New("Handler : ResponseWriter is mandatory")
+	}
 
 	data := make(map[string]string)
 	data["ip"] = ip
@@ -28,10 +33,10 @@ func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode 
 	(*w).WriteHeader(httpCode)
 	err := parsedTemplate.Execute(*w, data)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	return
+	return nil
 }
 
 // LOGOUT HANDLER
@@ -68,30 +73,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-// LOGIN HANDLER
-// return 302 if login ok
-// return 401 if login ko
-func Login(w http.ResponseWriter, r *http.Request) {
-
-	ip := GetIp(r)
-	credentials, err := GetCredentials(r)
-
-	// no or invalid credentials supplied
-	if err != nil {
-		log.Printf("Failed attempt for: %s - %v", ip, err)
-		time.Sleep(500 * time.Millisecond)
-		http.Redirect(w, r, "/", 401)
-		return
-	}
-
-	CreateOrExtendJwt(&w, credentials, ip, nil, nil)
-
-	// return if connected
-	log.Printf("Handler : Login for: %s", ip)
-	http.Redirect(w, r, "/", 302)
-	return
-}
-
 // DEFAULT HANDLER
 func Home(w http.ResponseWriter, r *http.Request) {
 
@@ -111,14 +92,21 @@ func Home(w http.ResponseWriter, r *http.Request) {
 			log.Printf("Handler : Invalid Credentials for : %s - %v", ip, err)
 			// fake waiting time to limit brute force
 			time.Sleep(500 * time.Millisecond)
-			RenderTemplate(&w, claims, ip, http.StatusUnauthorized, state)
+			err = RenderTemplate(&w, claims, ip, http.StatusUnauthorized, state)
+			if err != nil {
+				log.Fatalf("Handler : Error rendering template - %v", err)
+			}
 			return
 		}
 
 		// valid credentials supplied
+		state = "in"
 		log.Printf("Handler : Creating Jwt for: %s", ip)
 		claims, err = CreateOrExtendJwt(&w, credentials, ip, claims, cookie)
 		RenderTemplate(&w, claims, ip, 300, state)
+		if err != nil {
+			log.Fatalf("Handler : Error rendering template - %v", err)
+		}
 		return
 	}
 
@@ -131,10 +119,16 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Handler : Refreshing Jwt for: %s", ip)
 		claims, err = CreateOrExtendJwt(&w, nil, ip, claims, cookie)
 		RenderTemplate(&w, claims, ip, 300, state)
+		if err != nil {
+			log.Fatalf("Handler : Error rendering template - %v", err)
+		}
 		return
 	}
 
 	//log.Printf("Home for: %s", ip)
 	RenderTemplate(&w, claims, ip, http.StatusOK, state)
+	if err != nil {
+		log.Fatalf("Handler : Error rendering template - %v", err)
+	}
 	return
 }
