@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -19,12 +20,12 @@ func TestGetIp(t *testing.T) {
 	assert.Equal(expectedIp, ip)
 
 	expectedIp = "2.2.2.2"
-	req.Header.Set("X-Forwarded-For", expectedIp+":123456, 9.9.9.9, 8.7.6.8:1235")
+	req.Header.Add("X-Forwarded-For", expectedIp+":123456, 9.9.9.9, 8.7.6.8:1235")
 	ip = GetIp(req)
 	assert.Equal(expectedIp, ip)
 
 	expectedIp = "3.3.3.3"
-	req.Header.Set("X-Real-IP", expectedIp)
+	req.Header.Add("X-Real-IP", expectedIp)
 	ip = GetIp(req)
 	assert.Equal(expectedIp, ip)
 
@@ -36,39 +37,72 @@ func TestGetIp(t *testing.T) {
 }
 
 func TestIsValidHash(t *testing.T) {
-	cases := []struct {
-		ClearText string
-		ValidHash string
-		IsValid   bool
+	testCases := []struct {
+		Name           string
+		ExpectedReturn bool
+		Clear          string
+		Hash           string
 	}{
-		{"pass", "$2a$10$6.uxYeW/Ucxtom7yjW6Kh..oifG6IPy1ly63AjCArUKmfhu0..wtq", true},
-		{"pwd", "$2a$10$/xN4OWsfJ0P8NCCKYMZa6ugsN9zgfFf9zG94RISv4hZ8eA31qLWX6", true},
-		{"toto", "$2a$10$/xN4OWsfJ0P8NCCKYMZa6ugsN9zgfFf9zG94RISv4hZ8eA31q000", false},
+		{
+			Name:           "valid",
+			ExpectedReturn: true,
+			Clear:          globPassword,
+			Hash:           globBcrypt0000,
+		},
+		{
+			Name:           "validH",
+			ExpectedReturn: true,
+			Clear:          globPasswordH,
+			Hash:           globBcrypt1111,
+		},
+		{
+			Name:           "invalid",
+			ExpectedReturn: false,
+			Clear:          "test",
+			Hash:           globBcrypt0000,
+		},
 	}
-	for _, cas := range cases {
-		err := IsValidHash(cas.ClearText, cas.ValidHash)
-		assert.Equalf(t, (err == nil), cas.IsValid, "Error in hash validation for %s", cas.ClearText)
+
+	for _, tc := range testCases {
+		// shadow
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			err := IsValidHash(tc.Clear, tc.Hash)
+			assert.Equal(t, (err == nil), tc.ExpectedReturn)
+		})
 	}
 }
 
 func TestGetHash(t *testing.T) {
-	cases := []string{"toto", "tata", "titi"}
-	for _, cas := range cases {
-		got, _ := GetHash(cas)
-		err := IsValidHash(cas, got)
-		assert.NoErrorf(t, err, "Error for %s", cas)
+	testCases := []struct {
+		Name string
+		Data string
+	}{
+		{"Test 1", "toto"},
+		{"Test 2", "tata"},
+	}
+	for _, tc := range testCases {
+		// shadow
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			got, _ := GetHash(tc.Data)
+			err := IsValidHash(tc.Data, got)
+			assert.NoError(t, err)
+		})
 	}
 }
 
 func TestGenerateRand(t *testing.T) {
-	cases := []uint{5, 10, 99, 0}
-	for _, cas := range cases {
-		n, err := GenerateRand(cas)
-		if cas < 0 {
-			assert.Error(t, err, "No error for %s", cas)
-			continue
-		}
-		assert.Lenf(t, *n, int(cas), "Bad length for %s", cas)
+	testCases := []uint{5, 10, 99, 0}
+	for _, tc := range testCases {
+		// shadow
+		tc := tc
+		t.Run(fmt.Sprint(tc), func(t *testing.T) {
+			t.Parallel()
+			ret, _ := GenerateRand(tc)
+			assert.Len(t, *ret, int(tc))
+		})
 	}
-
 }

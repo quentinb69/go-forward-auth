@@ -64,45 +64,45 @@ func TestGetClaims(t *testing.T) {
 	assert.EqualError(err, "http: named cookie not present")
 
 	// jwt errors
-	co := cookies["fake"]
+	co := cookiesClaims["fake"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
-	req.AddCookie(&co)
+	req.AddCookie(co)
 	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.Errorf(err, "Malformed JWT")
 
-	co = cookies["badAlgo"]
+	co = cookiesClaims["badAlgo"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
-	req.AddCookie(&co)
+	req.AddCookie(co)
 	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "Claims : Invalid Jwt - Unexpected signing method: none")
 
-	co = cookies["altered"]
+	co = cookiesClaims["altered"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
-	req.AddCookie(&co)
+	req.AddCookie(co)
 	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "Claims : Invalid Jwt - signature is invalid")
 
-	co = cookies["expired"]
+	co = cookiesClaims["expired"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
-	req.AddCookie(&co)
+	req.AddCookie(co)
 	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.Errorf(err, "Expired")
 
-	co = cookies["invalidIp"]
+	co = cookiesClaims["invalidIp"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
-	req.AddCookie(&co)
+	req.AddCookie(co)
 	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "Claims : Invalid IP")
 
 	// valid jwt
-	co = cookies["valid"]
+	co = cookiesClaims["valid"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
-	req.AddCookie(&co)
+	req.AddCookie(co)
 	ret, _, err = GetClaims(req, globValidIp)
 	assert.Equal(globUsername, ret.Username)
 	assert.Equal(globValidIp, ret.Ip)
