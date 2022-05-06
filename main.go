@@ -11,7 +11,6 @@ func main() {
 	loadConfiguration()
 
 	http.HandleFunc("/", Home)
-	http.HandleFunc("/login", Login)
 	http.HandleFunc("/logout", Logout)
 
 	log.Printf("Loading server on port %d... (TLS connection is set to %t)", configuration.Port, configuration.Tls)

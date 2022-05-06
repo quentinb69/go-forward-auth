@@ -11,7 +11,7 @@ import (
 func TestIsValid(t *testing.T) {
 	assert := assert.New(t)
 	backup := configuration.Users
-	defer func(){ configuration.Users = backup }()
+	defer func() { configuration.Users = backup }()
 
 	cred := credentials
 
@@ -71,20 +71,20 @@ func TestGetCredentialsFromForm(t *testing.T) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	c, err = GetCredentialsFromForm(req)
 	assert.NoError(err)
-	assert.Equal(c.Username, globUsername)
-	assert.Equal(c.Password, "")
-	assert.Equal(c.Action, globAction)
-	assert.Equal(c.Csrf, globCsrf)
+	assert.Equal(globUsername, c.Username)
+	assert.Equal("", c.Password)
+	assert.Equal(globAction, c.Action)
+	assert.Equal(globCsrf, c.Csrf)
 
 	// valid
 	req, _ = http.NewRequest("POST", "http://localhost", strings.NewReader(globData))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	c, err = GetCredentialsFromForm(req)
 	assert.NoError(err)
-	assert.Equal(c.Username, globUsername)
-	assert.Equal(c.Password, globPassword)
-	assert.Equal(c.Action, globAction)
-	assert.Equal(c.Csrf, globCsrf)
+	assert.Equal(globUsername, c.Username)
+	assert.Equal(globPassword, c.Password)
+	assert.Equal(globAction, c.Action)
+	assert.Equal(globCsrf, c.Csrf)
 }
 
 func TestGetCredentialsFromHeader(t *testing.T) {
@@ -106,19 +106,19 @@ func TestGetCredentialsFromHeader(t *testing.T) {
 	req.Header.Set("Auth-Form", globDataNoPassword)
 	c, err = GetCredentialsFromHeader(req)
 	assert.NoError(err)
-	assert.Equal(c.Username, globUsername)
-	assert.Equal(c.Password, "")
-	assert.Equal(c.Action, globAction)
-	assert.Equal(c.Csrf, globCsrf)
+	assert.Equal(globUsername, c.Username)
+	assert.Equal("", c.Password)
+	assert.Equal(globAction, c.Action)
+	assert.Equal(globCsrf, c.Csrf)
 
 	// valid
 	req.Header.Set("Auth-Form", globData)
 	c, err = GetCredentialsFromHeader(req)
 	assert.NoError(err)
-	assert.Equal(c.Username, globUsername)
-	assert.Equal(c.Password, globPassword)
-	assert.Equal(c.Action, globAction)
-	assert.Equal(c.Csrf, globCsrf)
+	assert.Equal(globUsername, c.Username)
+	assert.Equal(globPassword, c.Password)
+	assert.Equal(globAction, c.Action)
+	assert.Equal(globCsrf, c.Csrf)
 }
 
 func TestGetCredentials(t *testing.T) {
@@ -135,19 +135,19 @@ func TestGetCredentials(t *testing.T) {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	c, err = GetCredentials(req)
 	assert.NoError(err)
-	assert.Equal(c.Username, globUsername)
-	assert.Equal(c.Password, globPassword)
-	assert.Equal(c.Action, globAction)
-	assert.Equal(c.Csrf, globCsrf)
+	assert.Equal(globUsername, c.Username)
+	assert.Equal(globPassword, c.Password)
+	assert.Equal(globAction, c.Action)
+	assert.Equal(globCsrf, c.Csrf)
 
 	// HEADER
 	req.Header.Set("Auth-Form", globDataHeader)
 	c, err = GetCredentials(req)
 	assert.NoError(err)
-	assert.Equal(c.Username, globUsername+"H")
-	assert.Equal(c.Password, globPasswordH)
-	assert.Equal(c.Action, globAction+"H")
-	assert.Equal(c.Csrf, globCsrf+"H")
+	assert.Equal(globUsername+"H", c.Username)
+	assert.Equal(globPasswordH, c.Password)
+	assert.Equal(globAction+"H", c.Action)
+	assert.Equal(globCsrf+"H", c.Csrf)
 
 	// POST & HEADER, valid HEADER
 	req, _ = http.NewRequest("POST", "http://localhost", strings.NewReader(globData))
@@ -155,10 +155,10 @@ func TestGetCredentials(t *testing.T) {
 	req.Header.Add("Auth-Form", globDataHeader)
 	c, err = GetCredentials(req)
 	assert.NoError(err)
-	assert.Equal(c.Username, globUsername+"H")
-	assert.Equal(c.Password, globPasswordH)
-	assert.Equal(c.Action, globAction+"H")
-	assert.Equal(c.Csrf, globCsrf+"H")
+	assert.Equal(globUsername+"H", c.Username)
+	assert.Equal(globPasswordH, c.Password)
+	assert.Equal(globAction+"H", c.Action)
+	assert.Equal(globCsrf+"H", c.Csrf)
 
 	// POST & HEADER, invalid HEADER
 	req, _ = http.NewRequest("POST", "http://localhost", strings.NewReader(globData))
@@ -166,10 +166,10 @@ func TestGetCredentials(t *testing.T) {
 	req.Header.Add("Auth-Form", "FAKE")
 	c, err = GetCredentials(req)
 	assert.NoError(err)
-	assert.Equal(c.Username, globUsername)
-	assert.Equal(c.Password, globPassword)
-	assert.Equal(c.Action, globAction)
-	assert.Equal(c.Csrf, globCsrf)
+	assert.Equal(globUsername, c.Username)
+	assert.Equal(globPassword, c.Password)
+	assert.Equal(globAction, c.Action)
+	assert.Equal(globCsrf, c.Csrf)
 
 	// POST & HEADER, invalid HEADER and invalid POST
 	req, _ = http.NewRequest("POST", "http://localhost", strings.NewReader("FAKE"))

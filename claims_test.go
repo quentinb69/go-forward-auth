@@ -9,7 +9,7 @@ import (
 
 func TestIsValidIp(t *testing.T) {
 	assert := assert.New(t)
-	
+
 	c := claims
 	ret := c.IsValidIp(globOtherIp)
 	assert.False(ret)
@@ -22,7 +22,7 @@ func TestCreateOrExtendJwt(t *testing.T) {
 	backup := configuration.CookieName
 	configuration.CookieName = "" //TODO must be "", if not panic...
 	defer func() { configuration.CookieName = backup }()
-	
+
 	w := new(http.ResponseWriter)
 	c := claims
 	cr := credentials
@@ -37,15 +37,15 @@ func TestCreateOrExtendJwt(t *testing.T) {
 
 	// extend test
 	ret, err = CreateOrExtendJwt(w, nil, globOtherIp, &c, nil)
-	assert.Equal(*ret, c)
-	assert.Equal(ret.Ip, globOtherIp)
+	assert.Equal(c, *ret)
+	assert.Equal(globOtherIp, ret.Ip)
 	assert.NoError(err)
 
 	// created
 	ret, err = CreateOrExtendJwt(w, &cr, globOtherIp, nil, nil)
 	assert.NotEqual(*ret, c)
-	assert.Equal(ret.Username, cr.Username)
-	assert.Equal(ret.Ip, globOtherIp)
+	assert.Equal(cr.Username, ret.Username)
+	assert.Equal(globOtherIp, ret.Ip)
 	assert.NoError(err)
 }
 
@@ -104,7 +104,7 @@ func TestGetClaims(t *testing.T) {
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(&co)
 	ret, _, err = GetClaims(req, globValidIp)
-	assert.Equal(ret.Username, globUsername)
-	assert.Equal(ret.Ip, globValidIp)
+	assert.Equal(globUsername, ret.Username)
+	assert.Equal(globValidIp, ret.Ip)
 	assert.NoError(err)
 }
