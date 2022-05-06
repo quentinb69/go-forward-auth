@@ -20,6 +20,7 @@ func (c Claims) IsValidIp(ip string) bool {
 }
 
 // Create or extend jwt duration
+// return an error if critic parameters are nil
 func CreateOrExtendJwt(w *http.ResponseWriter, creds *Credentials, ip string, claims *Claims, cookie *http.Cookie) (*Claims, error) {
 
 	if w == nil {
@@ -31,14 +32,12 @@ func CreateOrExtendJwt(w *http.ResponseWriter, creds *Credentials, ip string, cl
 
 	expiresAt := time.Now().Add(configuration.TokenExpire * time.Minute)
 
-	// update claims
-	if claims != nil {
+	if claims != nil { // Update claims
 		claims.ExpiresAt = expiresAt.Unix()
 		claims.IssuedAt = time.Now().Unix()
 		claims.NotBefore = time.Now().Unix()
 		claims.Ip = ip
-		// create claims
-	} else {
+	} else { // create claims
 		claims = &Claims{
 			Username: creds.Username,
 			Ip:       ip,
@@ -52,11 +51,11 @@ func CreateOrExtendJwt(w *http.ResponseWriter, creds *Credentials, ip string, cl
 		}
 	}
 
-	// create jwt token and sign it
+	// Create jwt token and sign it
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, _ := token.SignedString(configuration.JwtKey)
 
-	// add or update cookie
+	// Add or update cookie
 	http.SetCookie(*w, &http.Cookie{
 		Name:     configuration.CookieName,
 		Value:    tokenString,
@@ -72,32 +71,35 @@ func CreateOrExtendJwt(w *http.ResponseWriter, creds *Credentials, ip string, cl
 }
 
 // Get Claims from request
+// return an error if JWT is invalid or inexistant
 func GetClaims(r *http.Request, ip string) (*Claims, *http.Cookie, error) {
 
 	if r == nil {
 		return nil, nil, errors.New("Claims : Invalid Request")
 	}
 
-	// get token
+	// Get token
 	cookie, err := r.Cookie(configuration.CookieName)
 	if err != nil {
 		return nil, cookie, err
 	}
 	tokenString := cookie.Value
 
-	// parse jwt to Claims
+	// Parse jwt to Claims
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-		// validate alg
+		// Validate alg for security ("none" is not allowed)
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		return configuration.JwtKey, nil
 	})
 
+	// Validate jwt
 	if err != nil || !token.Valid {
 		return nil, cookie, errors.New("Claims : Invalid Jwt - " + err.Error())
 	}
+	// Validate ip
 	if !claims.IsValidIp(ip) {
 		return nil, cookie, errors.New("Claims : Invalid IP")
 	}
