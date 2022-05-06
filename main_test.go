@@ -1,13 +1,12 @@
 package main
 
 import (
-	"testing"
-	"os"
 	"net/http"
+	"os"
+	"testing"
 
 	"github.com/golang-jwt/jwt/v4"
 )
-
 
 // Crypted password
 const globBcrypt0000 = "$2a$05$5Q7AIdXjMaiCnd2VZYNlke7PskIgXNaaOKrUVIa787VUU5L5usooG"
@@ -29,6 +28,7 @@ const globData = "username=" + globUsername + "&password=" + globPassword + "&ac
 const globDataHeader = "username=" + globUsername + "H&password=" + globPasswordH + "&action=" + globAction + "H&csrf=" + globCsrf + "H"
 
 const globCookieName = "COOK"
+
 var cookies = map[string]http.Cookie{
 	"fake":      http.Cookie{Name: globCookieName, Value: "FAKE"},
 	"badAlgo":   http.Cookie{Name: globCookieName, Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0IiwiZXhwIjowLCJpYXQiOjAsImlzcyI6ImdmYSIsIm5iZiI6MH0.944b3a4a8fa6251bec89af3dba2c6eeca61e2851a13888091d9e0d3ac3af725e"},
@@ -65,7 +65,7 @@ func TestMain(m *testing.M) {
 	configuration.JwtKey = []byte("12345")
 	configuration.HtmlFile = "./default.index.html"
 	configuration.HashCost = 5
-	configuration.Users = map[string]string{ globUsername: globBcrypt0000, globUsername + "H": globBcrypt1111}
+	configuration.Users = map[string]string{globUsername: globBcrypt0000, globUsername + "H": globBcrypt1111}
 
 	os.Exit(m.Run())
 }

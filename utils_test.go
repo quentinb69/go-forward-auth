@@ -16,23 +16,23 @@ func TestGetIp(t *testing.T) {
 	expectedIp := "1.1.1.1"
 	req.RemoteAddr = expectedIp + ":123456"
 	ip := GetIp(req)
-	assert.Equal(ip, expectedIp)
+	assert.Equal(expectedIp, ip)
 
 	expectedIp = "2.2.2.2"
 	req.Header.Set("X-Forwarded-For", expectedIp+":123456, 9.9.9.9, 8.7.6.8:1235")
 	ip = GetIp(req)
-	assert.Equal(ip, expectedIp)
+	assert.Equal(expectedIp, ip)
 
 	expectedIp = "3.3.3.3"
 	req.Header.Set("X-Real-IP", expectedIp)
 	ip = GetIp(req)
-	assert.Equal(ip, expectedIp)
+	assert.Equal(expectedIp, ip)
 
 	// bad ip
 	req.Header.Set("X-Real-IP", " \r\n")
 	ip = GetIp(req)
 	expectedIp = "2.2.2.2"
-	assert.Equal(ip, expectedIp)
+	assert.Equal(expectedIp, ip)
 }
 
 func TestIsValidHash(t *testing.T) {
