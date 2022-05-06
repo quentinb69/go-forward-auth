@@ -7,53 +7,59 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var w = new(http.ResponseWriter)
-
 func TestIsValidIp(t *testing.T) {
-	ret := c.IsValidIp(otherIp)
-	assert.False(t, ret)
-
-	ret = c.IsValidIp(validIp)
-	assert.True(t, ret)
+	assert := assert.New(t)
+	
+	c := claims
+	ret := c.IsValidIp(globOtherIp)
+	assert.False(ret)
+	ret = c.IsValidIp(globValidIp)
+	assert.True(ret)
 }
 
 func TestCreateOrExtendJwt(t *testing.T) {
 	assert := assert.New(t)
-	localc := c
-	localcr := cr
+	backup := configuration.CookieName
+	configuration.CookieName = "" //TODO must be "", if not panic...
+	defer func() { configuration.CookieName = backup }()
+	
+	w := new(http.ResponseWriter)
+	c := claims
+	cr := credentials
 
 	// errors
 	ret, err := CreateOrExtendJwt(w, nil, "", nil, nil)
 	assert.EqualError(err, "Claims: No claims nor credential supplied")
 	assert.Nil(ret)
-	ret, err = CreateOrExtendJwt(nil, &localcr, "", &localc, nil)
+	ret, err = CreateOrExtendJwt(nil, &cr, "", &c, nil)
 	assert.EqualError(err, "Claims: No ResponseWriter supplied")
 	assert.Nil(ret)
 
 	// extend test
-	/*ret, err = CreateOrExtendJwt(w, nil, otherIp, &localc, nil)
+	ret, err = CreateOrExtendJwt(w, nil, globOtherIp, &c, nil)
 	assert.Equal(*ret, c)
-	assert.Equal(ret.Ip, otherIp)
-	assert.NoError(err)*/
+	assert.Equal(ret.Ip, globOtherIp)
+	assert.NoError(err)
 
 	// created
-	/*ret, err = CreateOrExtendJwt(w, &localcr, otherIp, nil, nil)
+	ret, err = CreateOrExtendJwt(w, &cr, globOtherIp, nil, nil)
 	assert.NotEqual(*ret, c)
 	assert.Equal(ret.Username, cr.Username)
-	assert.Equal(ret.Ip, otherIp)
-	assert.NoError(err)*/
+	assert.Equal(ret.Ip, globOtherIp)
+	assert.NoError(err)
 }
 
 func TestGetClaims(t *testing.T) {
 	assert := assert.New(t)
-	req, _ := http.NewRequest("POST", "http://localhost", nil)
 
 	// request errors
-	ret, _, err := GetClaims(nil, validIp)
+	req, _ := http.NewRequest("POST", "http://localhost", nil)
+	ret, _, err := GetClaims(nil, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "Claims : Invalid Request")
 
-	ret, _, err = GetClaims(req, validIp)
+	req, _ = http.NewRequest("POST", "http://localhost", nil)
+	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "http: named cookie not present")
 
@@ -61,35 +67,35 @@ func TestGetClaims(t *testing.T) {
 	co := cookies["fake"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(&co)
-	ret, _, err = GetClaims(req, validIp)
+	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.Errorf(err, "Malformed JWT")
 
 	co = cookies["badAlgo"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(&co)
-	ret, _, err = GetClaims(req, validIp)
+	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "Claims : Invalid Jwt - Unexpected signing method: none")
 
 	co = cookies["altered"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(&co)
-	ret, _, err = GetClaims(req, validIp)
+	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "Claims : Invalid Jwt - signature is invalid")
 
 	co = cookies["expired"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(&co)
-	ret, _, err = GetClaims(req, validIp)
+	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.Errorf(err, "Expired")
 
 	co = cookies["invalidIp"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(&co)
-	ret, _, err = GetClaims(req, otherIp)
+	ret, _, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "Claims : Invalid IP")
 
@@ -97,8 +103,8 @@ func TestGetClaims(t *testing.T) {
 	co = cookies["valid"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(&co)
-	ret, _, err = GetClaims(req, validIp)
-	assert.Equal(ret.Username, cr.Username)
-	assert.Equal(ret.Ip, validIp)
+	ret, _, err = GetClaims(req, globValidIp)
+	assert.Equal(ret.Username, globUsername)
+	assert.Equal(ret.Ip, globValidIp)
 	assert.NoError(err)
 }
