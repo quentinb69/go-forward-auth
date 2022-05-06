@@ -14,10 +14,10 @@ var decoder = schema.NewDecoder()
 
 // Action and Csrf not used...
 type Credentials struct {
-	Password string `schema: password,required`
-	Username string `schema: username,required`
-	Action   string `schema: action,required`
-	Csrf     string `schema: csrf,required`
+	Password string `schema:password,required`
+	Username string `schema:username,required`
+	Action   string `schema:action,required`
+	Csrf     string `schema:csrf,required`
 }
 
 // Validate credentials against user list supplied in configuration file

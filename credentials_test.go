@@ -97,13 +97,13 @@ func TestGetCredentialsFromHeader(t *testing.T) {
 	assert.Nil(c)
 
 	// no username
-	req.Header.Set("Auth-Form", globDataNoUsername)
+	req.Header = *headersCredentials["nousername"]
 	c, err = GetCredentialsFromHeader(req)
 	assert.EqualError(err, "Credentials : No username found in Header")
 	assert.Nil(c)
 
 	// no password
-	req.Header.Set("Auth-Form", globDataNoPassword)
+	req.Header = *headersCredentials["nopassword"]
 	c, err = GetCredentialsFromHeader(req)
 	assert.NoError(err)
 	assert.Equal(globUsername, c.Username)
@@ -112,7 +112,7 @@ func TestGetCredentialsFromHeader(t *testing.T) {
 	assert.Equal(globCsrf, c.Csrf)
 
 	// valid
-	req.Header.Set("Auth-Form", globData)
+	req.Header = *headersCredentials["valid"]
 	c, err = GetCredentialsFromHeader(req)
 	assert.NoError(err)
 	assert.Equal(globUsername, c.Username)
@@ -132,7 +132,7 @@ func TestGetCredentials(t *testing.T) {
 
 	// POST
 	req, _ = http.NewRequest("POST", "http://localhost", strings.NewReader(globData))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	c, err = GetCredentials(req)
 	assert.NoError(err)
 	assert.Equal(globUsername, c.Username)
@@ -141,7 +141,7 @@ func TestGetCredentials(t *testing.T) {
 	assert.Equal(globCsrf, c.Csrf)
 
 	// HEADER
-	req.Header.Set("Auth-Form", globDataHeader)
+	req.Header = *headersCredentials["validH"]
 	c, err = GetCredentials(req)
 	assert.NoError(err)
 	assert.Equal(globUsername+"H", c.Username)
@@ -151,8 +151,8 @@ func TestGetCredentials(t *testing.T) {
 
 	// POST & HEADER, valid HEADER
 	req, _ = http.NewRequest("POST", "http://localhost", strings.NewReader(globData))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Auth-Form", globDataHeader)
+	req.Header = *headersCredentials["validH"]
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	c, err = GetCredentials(req)
 	assert.NoError(err)
 	assert.Equal(globUsername+"H", c.Username)
@@ -162,8 +162,8 @@ func TestGetCredentials(t *testing.T) {
 
 	// POST & HEADER, invalid HEADER
 	req, _ = http.NewRequest("POST", "http://localhost", strings.NewReader(globData))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Auth-Form", "FAKE")
+	req.Header = *headersCredentials["fake"]
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	c, err = GetCredentials(req)
 	assert.NoError(err)
 	assert.Equal(globUsername, c.Username)
@@ -173,8 +173,8 @@ func TestGetCredentials(t *testing.T) {
 
 	// POST & HEADER, invalid HEADER and invalid POST
 	req, _ = http.NewRequest("POST", "http://localhost", strings.NewReader("FAKE"))
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.Header.Add("Auth-Form", "FAKE")
+	req.Header = *headersCredentials["fake"]
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	c, err = GetCredentials(req)
 	assert.EqualError(err, "Credentials : No username found in Form")
 	assert.Nil(c)
