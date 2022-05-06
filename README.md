@@ -18,7 +18,7 @@ Use at your own risk, not yet secured. Feel free to PR/Issue if you detect secur
   - return 200 and a "Welcome page" if valid JWT
 - /logout to logout
   - return 401 if invalid JWT
-  - return 302 if valid JWT (means you logged-in succesfully)
+  - return 302 if valid JWT (means you logged-out succesfully)
 
 To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarded to middlewares by Traefik)
 
