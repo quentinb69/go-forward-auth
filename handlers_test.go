@@ -46,7 +46,7 @@ func TestLogout(t *testing.T) {
 		{
 			Name:                 "NOJWT_NOCREDS",
 			ExpectedHttpCode:     401,
-			ExpectedBodyContains: "Login",
+			ExpectedBodyContains: "",
 			Ip:                   globValidIp,
 			Header:               http.Header{},
 			Cookie:               http.Cookie{},
