@@ -81,6 +81,4 @@ func loadConfiguration() {
 		log.Printf("Configuration read: %v", k)
 		log.Printf("Configuration parsed: %v", configuration)
 	}
-
-	return
 }

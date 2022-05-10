@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -39,24 +40,42 @@ var headersCredentials = map[string]*http.Header{
 	"validH":     {"Auth-Form": []string{globDataH}},
 }
 
+/*
+{
+  "alg": "HS256", // none for badalgo
+  "typ": "JWT"
+}
+{
+  "Username": "Test", // Tekt for altered (and bad signature)
+  "Ip": "1.2.3.4", // 8.5.7.5 for invalid ip
+  "iss": "gfa",
+  "aud": [
+    "https://localhost"
+  ],
+  "exp": 9999999999, // 2 for expired
+  "nbf": 1,
+  "iat": 1,
+  "jti": "e4Qve3yxpRLfWD8TDhYLddXbyRiVwCtaex2uT7Zq"
+}
+*/
 var cookiesClaims = map[string]*http.Cookie{
 	"fake":      {Name: globCookieName, Value: "FAKE"},
-	"badAlgo":   {Name: globCookieName, Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0IiwiZXhwIjowLCJpYXQiOjAsImlzcyI6ImdmYSIsIm5iZiI6MH0.944b3a4a8fa6251bec89af3dba2c6eeca61e2851a13888091d9e0d3ac3af725e"},
-	"altered":   {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0IiwiZXhwIjowLCJpYXQiOjAsImlzcyI6ImdmYSIsIm5iZiI6MH0.QQoUNk38fbh31jWtuPvySLplseAZbT_rSkt4fUpxE6A"},
-	"expired":   {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0IiwiZXhwIjoxLCJpYXQiOjEsImlzcyI6ImdmYSIsIm5iZiI6MX0.NGHH08MV5QoW0mYN7M-dCeytccTkD9vTg8ZhP-jdeOI"},
-	"invalidIp": {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjguNS43LjUiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0IiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjAsImlzcyI6ImdmYSIsIm5iZiI6MH0.7Z18-wmkmjvQtgTJwDi7Mag4PrmuEa4oPO78M1tVEAQ"},
-	"valid":     {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJhdWQiOiJodHRwOi8vbG9jYWxob3N0IiwiZXhwIjo5OTk5OTk5OTk5LCJpYXQiOjAsImlzcyI6ImdmYSIsIm5iZiI6MH0.XWcP6GTn3AOcClc5vZMAp3D-MLNNZX1M08p5rG9RdLY"},
+	"badalgo":   {Name: globCookieName, Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.WywXK85ZPjbKwvhviTXcyHOfKMH4gsaPAjHQN_kF-z4"},
+	"altered":   {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRla3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjoyLCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.qPYxT0mlE9uKorGLdLC6FLYFjAeRlH56-pVl75PnRyF"},
+	"expired":   {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjoyLCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.qPYxT0mlE9uKorGLdLC6FLYFjAeRlH56-pVl75PnRyE"},
+	"invalidIp": {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjguNS43LjUiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.tUHEqbShd0AyNtLPoUCbOQ4b1ZL-ROhh3C-RGVHCq84"},
+	"valid":     {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.WywXK85ZPjbKwvhviTXcyHOfKMH4gsaPAjHQN_kF-z4"},
 }
 
 var claims = Claims{
 	Username: globUsername,
 	Ip:       globValidIp,
-	StandardClaims: jwt.StandardClaims{
-		ExpiresAt: 99999999,
+	RegisteredClaims: jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Unix(999999999999999999, 0)),
 		Issuer:    "ISSUER",
-		Audience:  "http://localhost",
-		IssuedAt:  1,
-		NotBefore: 1,
+		Audience:  jwt.ClaimStrings{"http://localhost"},
+		IssuedAt:  jwt.NewNumericDate(time.Unix(1, 0)),
+		NotBefore: jwt.NewNumericDate(time.Unix(1, 0)),
 	},
 }
 var credentials = Credentials{

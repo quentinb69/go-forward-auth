@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"net/http"
@@ -12,48 +13,73 @@ import (
 type Claims struct {
 	Username string
 	Ip       string
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
+// compare ip with the one in claims
 func (c Claims) IsValidIp(ip string) bool {
 	return c.Ip == ip
 }
 
-// Create or extend jwt duration
+// Create claims from credentials
 // return an error if critic parameters are nil
-func CreateOrExtendJwt(w *http.ResponseWriter, creds *Credentials, ip string, claims *Claims, cookie *http.Cookie) (*Claims, error) {
+func CreateClaims(creds *Credentials, ip string) (claims *Claims, err error) {
+	if creds == nil {
+		return nil, errors.New("claims: no credentials supplied")
+	}
+	if err = creds.IsValid(); err != nil {
+		return nil, err
+	}
+	if ip == "" {
+		return nil, errors.New("claims: no ip provided")
+	}
+
+	claims = &Claims{}
+	claims.Username = creds.Username
+	claims.Ip = ip
+
+	return claims, nil
+}
+
+// Create jwt from claims
+// return an error if critic parameters are nil
+func CreateJwt(w *http.ResponseWriter, claims *Claims) (err error) {
 
 	if w == nil {
-		return nil, errors.New("Claims: No ResponseWriter supplied")
+		return errors.New("claims: no responsewriter supplied")
 	}
-	if creds == nil && claims == nil {
-		return nil, errors.New("Claims: No claims nor credential supplied")
+	if claims == nil {
+		return errors.New("claims: no claims supplied")
+	}
+	if claims.Username == "" || claims.Ip == "" {
+		return errors.New("claims: no username nor ip in claims")
 	}
 
+	// uniq id
+	id, err := GenerateRand(30)
+	if err != nil {
+		return errors.New("claims: error generating claims id")
+	}
+
+	// set standard claims data
 	expiresAt := time.Now().Add(configuration.TokenExpire * time.Minute)
-
-	if claims != nil { // Update claims
-		claims.ExpiresAt = expiresAt.Unix()
-		claims.IssuedAt = time.Now().Unix()
-		claims.NotBefore = time.Now().Unix()
-		claims.Ip = ip
-	} else { // create claims
-		claims = &Claims{
-			Username: creds.Username,
-			Ip:       ip,
-			StandardClaims: jwt.StandardClaims{
-				ExpiresAt: expiresAt.Unix(),
-				Issuer:    "gfa",
-				Audience:  "https://" + configuration.CookieDomain,
-				IssuedAt:  time.Now().Unix(),
-				NotBefore: time.Now().Unix(),
-			},
+	claims.ExpiresAt = jwt.NewNumericDate(expiresAt)
+	claims.IssuedAt = jwt.NewNumericDate(time.Now())
+	claims.NotBefore = jwt.NewNumericDate(time.Now())
+	claims.RegisteredClaims =
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expiresAt),
+			Issuer:    "gfa",
+			Audience:  jwt.ClaimStrings{"https://" + configuration.CookieDomain},
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			ID:        base64.URLEncoding.EncodeToString(*id),
 		}
-	}
 
 	// Create jwt token and sign it
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, _ := token.SignedString(configuration.JwtKey)
+	fmt.Printf("TEST: %v", tokenString)
 
 	// Add or update cookie
 	http.SetCookie(*w, &http.Cookie{
@@ -67,42 +93,42 @@ func CreateOrExtendJwt(w *http.ResponseWriter, creds *Credentials, ip string, cl
 		SameSite: http.SameSiteLaxMode,
 	})
 
-	return claims, nil
+	return nil
 }
 
 // Get Claims from request
 // return an error if JWT is invalid or inexistant
-func GetClaims(r *http.Request, ip string) (*Claims, *http.Cookie, error) {
+func GetClaims(r *http.Request, ip string) (claims *Claims, err error) {
 
 	if r == nil {
-		return nil, nil, errors.New("Claims : Invalid Request")
+		return nil, errors.New("claims: invalid request")
 	}
 
 	// Get token
 	cookie, err := r.Cookie(configuration.CookieName)
 	if err != nil {
-		return nil, cookie, err
+		return nil, err
 	}
 	tokenString := cookie.Value
 
 	// Parse jwt to Claims
-	claims := &Claims{}
+	claims = &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		// Validate alg for security ("none" is not allowed)
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return configuration.JwtKey, nil
 	})
 
 	// Validate jwt
 	if err != nil || !token.Valid {
-		return nil, cookie, errors.New("Claims : Invalid Jwt - " + err.Error())
+		return nil, errors.New("claims: invalid jwt - " + err.Error())
 	}
 	// Validate ip
 	if !claims.IsValidIp(ip) {
-		return nil, cookie, errors.New("Claims : Invalid IP")
+		return nil, errors.New("claims: invalid ip")
 	}
 
-	return claims, cookie, nil
+	return claims, nil
 }
