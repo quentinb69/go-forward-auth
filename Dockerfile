@@ -10,7 +10,7 @@ FROM alpine
 
 RUN apk update \
 	&& apk upgrade --no-cache \
-	&& apk add --no-cache openssl tzdata su-exec bash shadow
+	&& apk add --no-cache openssl 
 
 WORKDIR /opt/gfa
 COPY --from=builder /go-forward-auth ./gfa
