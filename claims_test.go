@@ -17,7 +17,7 @@ func TestIsValidIp(t *testing.T) {
 	assert.True(ret)
 }
 
-func TestCreateOrExtendJwt(t *testing.T) {
+func TestCreateJwt(t *testing.T) {
 	assert := assert.New(t)
 	backup := configuration.CookieName
 	configuration.CookieName = "" //TODO must be "", if not panic...
@@ -25,27 +25,41 @@ func TestCreateOrExtendJwt(t *testing.T) {
 
 	w := new(http.ResponseWriter)
 	c := claims
-	cr := credentials
 
 	// errors
-	ret, err := CreateOrExtendJwt(w, nil, "", nil, nil)
-	assert.EqualError(err, "Claims: No claims nor credential supplied")
-	assert.Nil(ret)
-	ret, err = CreateOrExtendJwt(nil, &cr, "", &c, nil)
-	assert.EqualError(err, "Claims: No ResponseWriter supplied")
-	assert.Nil(ret)
+	err := CreateJwt(w, nil)
+	assert.EqualError(err, "claims: no claims supplied")
+	err = CreateJwt(nil, &c)
+	assert.EqualError(err, "claims: no responsewriter supplied")
 
 	// extend test
-	ret, err = CreateOrExtendJwt(w, nil, globOtherIp, &c, nil)
-	assert.Equal(c, *ret)
-	assert.Equal(globOtherIp, ret.Ip)
+	err = CreateJwt(w, &c)
 	assert.NoError(err)
 
 	// created
-	ret, err = CreateOrExtendJwt(w, &cr, globOtherIp, nil, nil)
+	err = CreateJwt(w, &c)
+	assert.NoError(err)
+}
+
+func TestCreateClaims(t *testing.T) {
+	assert := assert.New(t)
+
+	c := claims
+	cr := credentials
+
+	// errors
+	ret, err := CreateClaims(nil, "")
+	assert.EqualError(err, "claims: no credentials supplied")
+	assert.Nil(ret)
+	ret, err = CreateClaims(&cr, "")
+	assert.EqualError(err, "claims: no ip provided")
+	assert.Nil(ret)
+
+	// created
+	ret, err = CreateClaims(&cr, globValidIp)
 	assert.NotEqual(*ret, c)
 	assert.Equal(cr.Username, ret.Username)
-	assert.Equal(globOtherIp, ret.Ip)
+	assert.Equal(globValidIp, ret.Ip)
 	assert.NoError(err)
 }
 
@@ -53,13 +67,12 @@ func TestGetClaims(t *testing.T) {
 	assert := assert.New(t)
 
 	// request errors
-	req, _ := http.NewRequest("POST", "http://localhost", nil)
-	ret, _, err := GetClaims(nil, globValidIp)
+	ret, err := GetClaims(nil, globValidIp)
 	assert.Nil(ret)
-	assert.EqualError(err, "Claims : Invalid Request")
+	assert.EqualError(err, "claims: invalid request")
 
-	req, _ = http.NewRequest("POST", "http://localhost", nil)
-	ret, _, err = GetClaims(req, globValidIp)
+	req, _ := http.NewRequest("POST", "http://localhost", nil)
+	ret, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.EqualError(err, "http: named cookie not present")
 
@@ -67,44 +80,45 @@ func TestGetClaims(t *testing.T) {
 	co := cookiesClaims["fake"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(co)
-	ret, _, err = GetClaims(req, globValidIp)
+	ret, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
-	assert.Errorf(err, "Malformed JWT")
+	assert.Errorf(err, "malformed jwt")
 
-	co = cookiesClaims["badAlgo"]
+	co = cookiesClaims["badalgo"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(co)
-	ret, _, err = GetClaims(req, globValidIp)
+	ret, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
-	assert.EqualError(err, "Claims : Invalid Jwt - Unexpected signing method: none")
+	assert.EqualError(err, "claims: invalid jwt - unexpected signing method: none")
 
 	co = cookiesClaims["altered"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(co)
-	ret, _, err = GetClaims(req, globValidIp)
+	ret, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
-	assert.EqualError(err, "Claims : Invalid Jwt - signature is invalid")
+	assert.EqualError(err, "claims: invalid jwt - signature is invalid")
 
 	co = cookiesClaims["expired"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(co)
-	ret, _, err = GetClaims(req, globValidIp)
+	ret, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
 	assert.Errorf(err, "Expired")
 
 	co = cookiesClaims["invalidIp"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(co)
-	ret, _, err = GetClaims(req, globValidIp)
+	ret, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
-	assert.EqualError(err, "Claims : Invalid IP")
+	assert.EqualError(err, "claims: invalid ip")
 
 	// valid jwt
 	co = cookiesClaims["valid"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(co)
-	ret, _, err = GetClaims(req, globValidIp)
+	ret, err = GetClaims(req, globValidIp)
 	assert.Equal(globUsername, ret.Username)
 	assert.Equal(globValidIp, ret.Ip)
+	assert.Len(ret.ID, 40)
 	assert.NoError(err)
 }
