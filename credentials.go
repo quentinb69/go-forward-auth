@@ -14,19 +14,19 @@ var decoder = schema.NewDecoder()
 
 // Action and Csrf not used...
 type Credentials struct {
-	Password string `schema:password,required`
-	Username string `schema:username,required`
-	Action   string `schema:action,required`
-	Csrf     string `schema:csrf,required`
+	Password string `schema:"password,required"`
+	Username string `schema:"username,required"`
+	Action   string `schema:"action"`
+	Csrf     string `schema:"csrf"`
 }
 
 // Validate credentials against user list supplied in configuration file
 // return an error if no user configured, or if password is empty, or if password do not match
-func (c Credentials) IsValid() error {
+func (c Credentials) IsValid() (err error) {
 
 	// If user list is empty
 	if configuration.Users == nil || len(configuration.Users) == 0 {
-		return errors.New("Credentials : No user available")
+		return errors.New("credentials: no user available")
 	}
 
 	// Get the expected password from user name (hashed)
@@ -34,7 +34,7 @@ func (c Credentials) IsValid() error {
 
 	// if password is not supplied
 	if !ok || expectedPassword == "" {
-		return errors.New("Credentials : No password supplied for user")
+		return errors.New("credentials: no password supplied for user")
 	}
 
 	// Compare hashes
@@ -43,11 +43,11 @@ func (c Credentials) IsValid() error {
 
 // Extract Credentials from request HEADER or BODY
 // return an error if credentials are invalid or inexistant
-func GetCredentials(r *http.Request) (*Credentials, error) {
+func GetCredentials(r *http.Request) (creds *Credentials, err error) {
 
-	creds, err := GetCredentialsFromHeader(r)
+	creds, err = GetCredentialsFromHeader(r)
 	if err != nil {
-		log.Printf("Getting Credentials from Form. %s", err)
+		log.Printf("credentials: error from header\n\t->%s", err)
 		creds, err = GetCredentialsFromForm(r)
 		// no creds supplied
 		if err != nil {
@@ -62,44 +62,41 @@ func GetCredentials(r *http.Request) (*Credentials, error) {
 
 // Extract Credentials from request BODY
 // return an error if method other than POST, or no crendentials data found
-func GetCredentialsFromForm(r *http.Request) (*Credentials, error) {
+func GetCredentialsFromForm(r *http.Request) (creds *Credentials, err error) {
 
 	if r.Method != http.MethodPost {
-		return nil, errors.New("Credentials : You must send data via POST")
+		return nil, errors.New("credentials: you must send data via post")
 	}
 
-	err := r.ParseForm()
+	err = r.ParseForm()
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("credentials: error parsing form\n\t->" + err.Error())
 	}
 
-	if r.Form.Get("username") == "" {
-		return nil, errors.New("Credentials : No username found in Form")
-	}
-
+	creds = &Credentials{}
 	// Get the body and decode into credentials
-	creds := &Credentials{}
-	err = decoder.Decode(creds, r.Form)
-	return creds, err
+	if err = decoder.Decode(creds, r.Form); err != nil {
+		return nil, errors.New("credentials: error decoding form data\n\t->" + err.Error())
+	}
+	return creds, nil
 }
 
 // Extract Credentials from request HEADER
 // return an error if no header "Auth-Form", or no crendentials data found
-func GetCredentialsFromHeader(r *http.Request) (*Credentials, error) {
+func GetCredentialsFromHeader(r *http.Request) (creds *Credentials, err error) {
 
 	// Get value from "Auth-Form" Header
 	urlCreds, err := url.ParseQuery(r.Header.Get("Auth-Form"))
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("credentials: error parsing header\n\t->" + err.Error())
 	}
 
-	if urlCreds.Get("username") == "" {
-		return nil, errors.New("Credentials : No username found in Header")
+	creds = &Credentials{}
+	// Get the body and decode into credentials
+	if err = decoder.Decode(creds, urlCreds); err != nil {
+		return nil, errors.New("credentials: error decoding header data\n\t->" + err.Error())
 	}
-
-	creds := &Credentials{}
-	err = decoder.Decode(creds, urlCreds)
-	return creds, err
+	return creds, nil
 }

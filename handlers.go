@@ -12,7 +12,7 @@ import (
 func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode int, state string) error {
 
 	if *w == nil {
-		return errors.New("Handler : ResponseWriter is mandatory")
+		return errors.New("handler: responsewriter is mandatory")
 	}
 
 	data := make(map[string]string)
@@ -45,13 +45,13 @@ func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode 
 func Logout(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
-	_, _, err := GetClaims(r, ip)
+	_, err := GetClaims(r, ip)
 
 	// no or invalid jwt supplied
 	if err != nil {
-		log.Printf("Handler : Invalid JWT for : %s - %v", ip, err)
+		log.Printf("handler: invalid jwt for : %s - %v", ip, err)
 		time.Sleep(500 * time.Millisecond)
-		http.Redirect(w, r, "/", 401)
+		http.Redirect(w, r, "/", http.StatusUnauthorized)
 		return
 	}
 
@@ -68,9 +68,8 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// return if disconnected
-	log.Printf("Handler : Logout for: %s", ip)
-	http.Redirect(w, r, "/", 302)
-	return
+	log.Printf("handler: logout for: %s", ip)
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 // DEFAULT HANDLER
@@ -79,48 +78,55 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	ip := GetIp(r)
 	state := "out" // logged-in or logged-out
 
-	claims, cookie, err := GetClaims(r, ip)
+	claims, err := GetClaims(r, ip)
 
 	// no or invalid jwt supplied
 	if err != nil {
 
-		log.Printf("Handler : Invalid JWT for : %s - %v", ip, err)
+		log.Printf("handler: invalid jwt for : %s - %v", ip, err)
 		credentials, err := GetCredentials(r)
 
 		// no or invalid credentials supplied
 		if err != nil {
-			log.Printf("Handler : Invalid Credentials for : %s - %v", ip, err)
+			log.Printf("handler: invalid credentials for : %s - %v", ip, err)
 			// fake waiting time to limit brute force
 			time.Sleep(500 * time.Millisecond)
 			err = RenderTemplate(&w, claims, ip, http.StatusUnauthorized, state)
 			if err != nil {
-				log.Fatalf("Handler : Error rendering template - %v", err)
+				log.Fatalf("handler: error rendering template - %v", err)
 			}
 			return
 		}
 
 		// valid credentials supplied
 		state = "in"
-		log.Printf("Handler : Creating Jwt for: %s", ip)
-		claims, err = CreateOrExtendJwt(&w, credentials, ip, claims, cookie)
-		RenderTemplate(&w, claims, ip, 300, state)
+		log.Printf("handler: creating jwt for: %s", ip)
+		claims, err = CreateClaims(credentials, ip)
 		if err != nil {
-			log.Fatalf("Handler : Error rendering template - %v", err)
+			log.Fatalf("handler: error generating claims - %v ", err)
+		}
+		if err = CreateJwt(&w, claims); err != nil {
+			log.Fatalf("handler: new jwt - %v ", err)
+		}
+		RenderTemplate(&w, claims, ip, http.StatusMultipleChoices, state)
+		if err != nil {
+			log.Fatalf("handler: error rendering template - %v", err)
 		}
 		return
 	}
 
 	// valid jwt supplied
 	state = "in"
-	needRefresh := time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < configuration.TokenRefresh
-
-	// jwt can be extended (<10% left time)
+	needRefresh := time.Until(claims.ExpiresAt.Time) < configuration.TokenRefresh
+	// jwt can be extended
 	if needRefresh {
-		log.Printf("Handler : Refreshing Jwt for: %s", ip)
-		claims, err = CreateOrExtendJwt(&w, nil, ip, claims, cookie)
-		RenderTemplate(&w, claims, ip, 300, state)
+		log.Printf("handler: new jwt for: %s", ip)
+		if err = CreateJwt(&w, claims); err != nil {
+			log.Fatalf("handler: creating jwt - %v ", err)
+		}
+		RenderTemplate(&w, claims, ip, http.StatusMultipleChoices, state)
 		if err != nil {
-			log.Fatalf("Handler : Error rendering template - %v", err)
+			log.Fatalf("handler: error rendering template - %v", err)
 		}
 		return
 	}
@@ -128,7 +134,6 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	//log.Printf("Home for: %s", ip)
 	RenderTemplate(&w, claims, ip, http.StatusOK, state)
 	if err != nil {
-		log.Fatalf("Handler : Error rendering template - %v", err)
+		log.Fatalf("handler: error rendering template - %v", err)
 	}
-	return
 }
