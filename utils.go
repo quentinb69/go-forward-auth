@@ -30,7 +30,9 @@ func GetIp(r *http.Request) string {
 	ip = strings.Split(ip, ",")[0]
 	// extact IP from <ip>:<port> with ipv6 in mind
 	splittedIp := strings.Split(ip, ":")
-	ip = strings.Join(splittedIp[:len(splittedIp)-1], ":")
+	if len(splittedIp) > 1 {
+		ip = strings.Join(splittedIp[:len(splittedIp)-1], ":")
+	}
 	return ip
 }
 
