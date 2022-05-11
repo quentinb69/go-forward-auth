@@ -89,14 +89,14 @@ func TestGetClaims(t *testing.T) {
 	req.AddCookie(co)
 	ret, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
-	assert.EqualError(err, "claims: invalid jwt - unexpected signing method: none")
+	assert.ErrorContains(err, "unexpected signing method")
 
 	co = cookiesClaims["altered"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)
 	req.AddCookie(co)
 	ret, err = GetClaims(req, globValidIp)
 	assert.Nil(ret)
-	assert.EqualError(err, "claims: invalid jwt - signature is invalid")
+	assert.ErrorContains(err, "invalid jwt")
 
 	co = cookiesClaims["expired"]
 	req, _ = http.NewRequest("POST", "http://localhost", nil)

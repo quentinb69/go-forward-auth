@@ -10,30 +10,63 @@ import (
 
 // get user ip
 func TestGetIp(t *testing.T) {
-	req, _ := http.NewRequest("POST", "http://localhost", nil)
-	assert := assert.New(t)
+	testCases := []struct {
+		Name          string
+		XRealIP       string
+		XForwardedFor string
+		RemoteAddr    string
+		ExpectedIp    string
+	}{
+		{
+			Name:          "REAL_FORWARD_REMOTE",
+			XRealIP:       "10.11.12.13:6666, 13.14.15.16",
+			XForwardedFor: "1.2.3.4:8888, 4.5.6.7, 7.8.9.0:7777",
+			RemoteAddr:    "20.21.22.23:5555",
+			ExpectedIp:    "10.11.12.13",
+		},
+		{
+			Name:          "FORWARD_REMOTE",
+			XRealIP:       "",
+			XForwardedFor: "1.2.3.4:8888, 4.5.6.7, 7.8.9.0:7777",
+			RemoteAddr:    "20.21.22.23:5555",
+			ExpectedIp:    "1.2.3.4",
+		},
+		{
+			Name:          "REMOTE",
+			XRealIP:       "",
+			XForwardedFor: "",
+			RemoteAddr:    "20.21.22.23:5555",
+			ExpectedIp:    "20.21.22.23",
+		},
+		{
+			Name:          "BAD",
+			XRealIP:       "\n\r",
+			XForwardedFor: "\n\r",
+			RemoteAddr:    "1.2.3.4:888\n\r",
+			ExpectedIp:    "1.2.3.4",
+		},
+		{
+			Name:          "NO",
+			XRealIP:       "",
+			XForwardedFor: "",
+			RemoteAddr:    "",
+			ExpectedIp:    "",
+		},
+	}
 
-	// ok
-	expectedIp := "1.1.1.1"
-	req.RemoteAddr = expectedIp + ":123456"
-	ip := GetIp(req)
-	assert.Equal(expectedIp, ip)
-
-	expectedIp = "2.2.2.2"
-	req.Header.Add("X-Forwarded-For", expectedIp+":123456, 9.9.9.9, 8.7.6.8:1235")
-	ip = GetIp(req)
-	assert.Equal(expectedIp, ip)
-
-	expectedIp = "3.3.3.3"
-	req.Header.Add("X-Real-IP", expectedIp)
-	ip = GetIp(req)
-	assert.Equal(expectedIp, ip)
-
-	// bad ip
-	req.Header.Set("X-Real-IP", " \r\n")
-	ip = GetIp(req)
-	expectedIp = "2.2.2.2"
-	assert.Equal(expectedIp, ip)
+	for _, tc := range testCases {
+		// shadow
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+			req, _ := http.NewRequest("POST", "http://localhost", nil)
+			req.RemoteAddr = tc.RemoteAddr
+			req.Header.Add("X-Forwarded-For", tc.XForwardedFor)
+			req.Header.Add("X-Real-IP", tc.XRealIP)
+			ip := GetIp(req)
+			assert.Equal(t, tc.ExpectedIp, ip)
+		})
+	}
 }
 
 func TestIsValidHash(t *testing.T) {

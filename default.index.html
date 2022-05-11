@@ -82,7 +82,7 @@ body {
         <h1 class="form-title">Login</h1>
 	<div class="error" id="error"></div>
 	
-	<input type="text" class="form-input" name="username" placeholder="Username" autofocus>
+	<input type="text" class="form-input" name="username" placeholder="Username" id="username" autofocus>
 	<input type="password" class="form-input" name="password" placeholder="Password">
         
 	<button class="btn btn-primary form-btn" type="submit">Login</button>
@@ -118,12 +118,13 @@ body {
     xhr.withCredentials = true;
     xhr.onload = (e) => {
       if (xhr.status != 200 && (xhr.status < 300 || xhr.status >=400)) {
-    	// Print error message
-	error.innerHTML = xhr.status + " - Error during login...";
-	form.reset();
+    	  // Print error message
+	      error.innerHTML = xhr.status + " - Error during login...";
+	      form.reset();
+        document.getElementById("username").focus();
       }
       else {
-	// Refresh
+	      // Refresh
         window.location = window.location.href;
       }
     };
