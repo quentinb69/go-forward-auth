@@ -34,7 +34,7 @@ func (c Credentials) IsValid() (err error) {
 
 	// if password is not supplied
 	if !ok || expectedPassword == "" {
-		return errors.New("credentials: no password supplied for user")
+		return errors.New("credentials: bad password supplied for user")
 	}
 
 	// Compare hashes
@@ -47,7 +47,7 @@ func GetCredentials(r *http.Request) (creds *Credentials, err error) {
 
 	creds, err = GetCredentialsFromHeader(r)
 	if err != nil {
-		log.Printf("credentials: error from header\n\t->%s", err)
+		log.Printf("credentials: error from header\n\t-> %s", err)
 		creds, err = GetCredentialsFromForm(r)
 		// no creds supplied
 		if err != nil {
@@ -71,13 +71,13 @@ func GetCredentialsFromForm(r *http.Request) (creds *Credentials, err error) {
 	err = r.ParseForm()
 
 	if err != nil {
-		return nil, errors.New("credentials: error parsing form\n\t->" + err.Error())
+		return nil, errors.New("credentials: error parsing form\n\t-> " + err.Error())
 	}
 
 	creds = &Credentials{}
 	// Get the body and decode into credentials
 	if err = decoder.Decode(creds, r.Form); err != nil {
-		return nil, errors.New("credentials: error decoding form data\n\t->" + err.Error())
+		return nil, errors.New("credentials: error decoding form data\n\t-> " + err.Error())
 	}
 	return creds, nil
 }
@@ -90,13 +90,13 @@ func GetCredentialsFromHeader(r *http.Request) (creds *Credentials, err error) {
 	urlCreds, err := url.ParseQuery(r.Header.Get("Auth-Form"))
 
 	if err != nil {
-		return nil, errors.New("credentials: error parsing header\n\t->" + err.Error())
+		return nil, errors.New("credentials: error parsing header\n\t-> " + err.Error())
 	}
 
 	creds = &Credentials{}
 	// Get the body and decode into credentials
 	if err = decoder.Decode(creds, urlCreds); err != nil {
-		return nil, errors.New("credentials: error decoding header data\n\t->" + err.Error())
+		return nil, errors.New("credentials: error decoding header data\n\t-> " + err.Error())
 	}
 	return creds, nil
 }

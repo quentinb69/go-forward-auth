@@ -71,6 +71,7 @@ var claims = Claims{
 	Username: globUsername,
 	Ip:       globValidIp,
 	RegisteredClaims: jwt.RegisteredClaims{
+		ID:        "999",
 		ExpiresAt: jwt.NewNumericDate(time.Unix(999999999999999999, 0)),
 		Issuer:    "ISSUER",
 		Audience:  jwt.ClaimStrings{"http://localhost"},
@@ -91,6 +92,7 @@ func TestMain(m *testing.M) {
 	configuration.CookieName = globCookieName
 	configuration.CookieDomain = "localhost"
 	configuration.TokenExpire = 10
+	configuration.TokenRefresh = 2
 	configuration.JwtKey = []byte("12345")
 	configuration.HtmlFile = "./default.index.html"
 	configuration.HashCost = 5

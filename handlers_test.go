@@ -5,7 +5,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -95,12 +97,21 @@ func TestLogout(t *testing.T) {
 }
 
 func TestHome(t *testing.T) {
-	//TODO test extend jwt test
+	// create jwt
+	refreshClaims, err := CreateClaims(&credentials, globValidIp)
+	assert.NoError(t, err)
+	refreshClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(configuration.TokenRefresh * time.Minute))
+
+	// Create jwt token and sign it
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
+	refreshTokenString, _ := refreshToken.SignedString(configuration.JwtKey)
+	refreshCookie := &http.Cookie{Name: globCookieName, Value: refreshTokenString}
+
 	testCases := []structTestHandler{
 		{
 			Name:                 "NOJWT_NOCREDS",
 			ExpectedHttpCode:     401,
-			ExpectedBodyContains: "Login",
+			ExpectedBodyContains: "Login</button",
 			Ip:                   globValidIp,
 			Header:               http.Header{},
 			Cookie:               http.Cookie{},
@@ -108,7 +119,7 @@ func TestHome(t *testing.T) {
 		{
 			Name:                 "BADJWT_NOCREDS",
 			ExpectedHttpCode:     401,
-			ExpectedBodyContains: "Login",
+			ExpectedBodyContains: "Login</button",
 			Ip:                   globValidIp,
 			Header:               http.Header{},
 			Cookie:               *cookiesClaims["altered"],
@@ -116,7 +127,7 @@ func TestHome(t *testing.T) {
 		{
 			Name:                 "NOJWT_BADCREDS",
 			ExpectedHttpCode:     401,
-			ExpectedBodyContains: "Login",
+			ExpectedBodyContains: "Login</button",
 			Ip:                   globValidIp,
 			Header:               *headersCredentials["invalid"],
 			Cookie:               http.Cookie{},
@@ -124,7 +135,7 @@ func TestHome(t *testing.T) {
 		{
 			Name:                 "BADJWT_BADCREDS",
 			ExpectedHttpCode:     401,
-			ExpectedBodyContains: "Login",
+			ExpectedBodyContains: "Login</button",
 			Ip:                   globValidIp,
 			Header:               *headersCredentials["invalid"],
 			Cookie:               *cookiesClaims["altered"],
@@ -132,15 +143,23 @@ func TestHome(t *testing.T) {
 		{
 			Name:                 "BADJWT_OKCREDS",
 			ExpectedHttpCode:     300,
-			ExpectedBodyContains: "Login",
+			ExpectedBodyContains: "Welcome",
 			Ip:                   globValidIp,
 			Header:               *headersCredentials["valid"],
 			Cookie:               *cookiesClaims["altered"],
 		},
 		{
+			Name:                 "REFRESHJWT_NOCREDS",
+			ExpectedHttpCode:     300,
+			ExpectedBodyContains: "Welcome",
+			Ip:                   globValidIp,
+			Header:               http.Header{},
+			Cookie:               *refreshCookie,
+		},
+		{
 			Name:                 "OKJWT_NOCREDS",
 			ExpectedHttpCode:     200,
-			ExpectedBodyContains: "Login",
+			ExpectedBodyContains: "Welcome",
 			Ip:                   globValidIp,
 			Header:               http.Header{},
 			Cookie:               *cookiesClaims["valid"],

@@ -42,7 +42,7 @@ func loadConfiguration() {
 
 	// default configuration
 	if err := k.Load(file.Provider(defaultConfigurationFile), yaml.Parser()); err != nil {
-		log.Fatalf("Error loading default configuration: %v", err)
+		log.Fatalf("Error loading default configuration\n\t-> %v", err)
 	}
 
 	// read configuration from file.
@@ -50,18 +50,18 @@ func loadConfiguration() {
 	if configFile != "" {
 		if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
 			// error in supplied file, so bloking error
-			log.Fatalf("Error loading configuration file: %v", err)
+			log.Fatalf("Error loading configuration file\n\t-> %v", err)
 		}
 	} else {
 		if err := k.Load(file.Provider(arbitraryDefinedConfigFile), yaml.Parser()); err != nil {
 			// error in arbitrary path file, so non-bloking error
-			log.Printf("Can't load configuration file: %v", err)
+			log.Printf("Can't load configuration file\n\t-> %v", err)
 		}
 	}
 
 	// load configuration in global configuration var
 	if err := k.Unmarshal("", &configuration); err != nil {
-		log.Fatalf("Error parsing configuration: %v", err)
+		log.Fatalf("Error parsing configuration\n\t-> %v", err)
 	}
 
 	// if weak secret provided, generate one
@@ -69,16 +69,16 @@ func loadConfiguration() {
 		log.Printf("JwtKey provided is too weak (%d), generating one...", len(configuration.JwtKey))
 		array, err := GenerateRand(64)
 		if err != nil {
-			log.Fatalf("Error generating JwtKey: %v", err)
+			log.Fatalf("Error generating JwtKey\n\t-> %v", err)
 		}
 		configuration.JwtKey = *array
 	}
 
-	log.Printf("Configuration loaded from file: %s, %s", defaultConfigurationFile, configFile)
+	log.Printf("Configuration loaded from file:\n\t%s,\n\t%s", defaultConfigurationFile, configFile)
 
 	// print configuration values
 	if debug {
-		log.Printf("Configuration read: %v", k)
-		log.Printf("Configuration parsed: %v", configuration)
+		log.Printf("Configuration read:\n\t%v", k)
+		log.Printf("Configuration parsed:\n\t%v", configuration)
 	}
 }
