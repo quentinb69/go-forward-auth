@@ -46,6 +46,13 @@ func TestGetIp(t *testing.T) {
 			ExpectedIp:    "1.2.3.4",
 		},
 		{
+			Name:          "IPV6",
+			XRealIP:       "\n\r",
+			XForwardedFor: "\n\r",
+			RemoteAddr:    "[2001:db8:0:85a3::ac1f:8001]:13516\n\r",
+			ExpectedIp:    "[2001:db8:0:85a3::ac1f:8001]",
+		},
+		{
 			Name:          "NO",
 			XRealIP:       "",
 			XForwardedFor: "",
