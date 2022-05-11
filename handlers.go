@@ -11,7 +11,7 @@ import (
 // Render HTML passed in configuration
 func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode int, state string) error {
 
-	if *w == nil {
+	if w == nil {
 		return errors.New("handler: responsewriter is mandatory")
 	}
 

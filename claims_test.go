@@ -18,6 +18,7 @@ func TestIsValidIp(t *testing.T) {
 }
 
 func TestCreateJwt(t *testing.T) {
+	//TODO test reponse containing cookie
 	assert := assert.New(t)
 	backup := configuration.CookieName
 	configuration.CookieName = "" //TODO must be "", if not panic...
