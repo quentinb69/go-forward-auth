@@ -22,25 +22,73 @@ type structTestHandler struct {
 
 func TestRenderTemplate(t *testing.T) {
 
-	//TODO test rendering
-	t.Skip()
+	testCases := []struct {
+		Name                 string
+		ExpectedHttpCode     int
+		ExpectedBodyContains string
+		Claims               Claims
+		Ip                   string
+		State                string
+	}{
+		{
+			Name:                 "IN_NOCLAIMS",
+			ExpectedHttpCode:     999,
+			ExpectedBodyContains: "Welcome",
+			Claims:               Claims{},
+			Ip:                   globValidIp,
+			State:                "in",
+		},
+		{
+			Name:                 "OUT_NOCLAIMS",
+			ExpectedHttpCode:     123,
+			ExpectedBodyContains: "Login</",
+			Claims:               Claims{},
+			Ip:                   globValidIp,
+			State:                "out",
+		},
+		{
+			Name:                 "IN_CLAIMS",
+			ExpectedHttpCode:     789,
+			ExpectedBodyContains: "Welcome",
+			Claims:               claims,
+			Ip:                   globValidIp,
+			State:                "in",
+		},
+		{
+			Name:                 "OUT_CLAIMS",
+			ExpectedHttpCode:     107,
+			ExpectedBodyContains: "Login</",
+			Claims:               Claims{},
+			Ip:                   globValidIp,
+			State:                "out",
+		},
+	}
 
-	assert := assert.New(t)
-	w := new(http.ResponseWriter)
-	c := claims
-	code := 999
+	for _, tc := range testCases {
+		// shadow
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 
-	// state in and claims
-	RenderTemplate(w, &c, globValidIp, code, "in")
-	assert.Equal(999, w)
+			// make request
+			w := httptest.NewRecorder()
+			wr := http.ResponseWriter(w)
+			RenderTemplate(&wr, &tc.Claims, tc.Ip, tc.ExpectedHttpCode, tc.State)
+			resp := w.Result()
+			body, _ := io.ReadAll(resp.Body)
 
-	// state in No claims
-	RenderTemplate(w, &c, globValidIp, code, "in")
-	assert.Equal(999, w)
+			// assert
+			assert.Equal(t, tc.ExpectedHttpCode, resp.StatusCode)
+			assert.Contains(t, string(body), tc.ExpectedBodyContains)
+			assert.Contains(t, string(body), tc.Ip)
+			if claims.Username != "" && tc.State == "in" {
+				assert.Contains(t, string(body), tc.Claims.Username)
+			}
+		})
+	}
 
-	// state out
-	RenderTemplate(w, &c, globValidIp, code, "out")
-	assert.Equal(999, w)
+	err := RenderTemplate(nil, nil, "", 0, "")
+	assert.ErrorContains(t, err, "responsewriter is mandatory")
 }
 
 func TestLogout(t *testing.T) {
