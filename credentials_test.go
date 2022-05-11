@@ -27,11 +27,11 @@ func TestIsValid(t *testing.T) {
 	// bad user-password
 	configuration.Users = map[string]string{"TEST2": "TOTO"}
 	err = cred.IsValid()
-	assert.EqualError(err, "credentials: no password supplied for user")
+	assert.EqualError(err, "credentials: bad password supplied for user")
 
 	configuration.Users = map[string]string{"TEST2": "TOTO", cred.Username: ""}
 	err = cred.IsValid()
-	assert.EqualError(err, "credentials: no password supplied for user")
+	assert.EqualError(err, "credentials: bad password supplied for user")
 
 	configuration.Users = map[string]string{"TEST2": "TOTO", cred.Username: globBcrypt1111}
 	err = cred.IsValid()
