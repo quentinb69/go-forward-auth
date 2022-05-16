@@ -113,7 +113,7 @@ var credentials = Credentials{
 func TestMain(m *testing.M) {
 	configuration.CookieName = globCookieName
 	configuration.Users = map[string]string{globUsername: globBcrypt0000, globUsername + "H": globBcrypt1111}
-	configuration.setValid()
+	configuration.Valid(true)
 
 	// need to do this after set valid because key is too weak
 	configuration.JwtKey = []byte("12345")

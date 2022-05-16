@@ -35,8 +35,8 @@ const defaultHtmlFile = "default.index.html"
 
 var configuration config
 
-// validate data, and set default values
-func (c *config) setValid() error {
+// validate data, and set default values if init is true
+func (c *config) Valid(init bool) error {
 	if c.Tls && (c.PrivateKey == "" || c.Cert == "") {
 		return errors.New("config: if Tls is true, please provide PrivateKey and Cert")
 	}
@@ -47,22 +47,37 @@ func (c *config) setValid() error {
 		}
 	}
 	if c.Port < 1 || c.Port > 65534 {
+		if !init {
+			return errors.New("config: bad Port")
+		}
 		c.Port = 8080
 		log.Printf("config: setting Port to %v", c.Port)
 	}
 	if c.CookieName == "" {
+		if !init {
+			return errors.New("config: missing CookieName")
+		}
 		c.CookieName = "GFA"
 		log.Printf("config: setting CookieName to %v", c.CookieName)
 	}
 	if c.TokenExpire < 1 {
+		if !init {
+			return errors.New("config: TokenExpire is too short")
+		}
 		c.TokenExpire = 90
 		log.Printf("config: setting TokenExpire to %v", c.TokenExpire)
 	}
 	if c.TokenRefresh < 1 {
+		if !init {
+			return errors.New("config: TokenRefresh is too short")
+		}
 		c.TokenRefresh = 2
 		log.Printf("config: setting TokenRefresh to %v", c.TokenRefresh)
 	}
 	if c.HtmlFile == "" {
+		if !init {
+			return errors.New("config: missing HtmlFile")
+		}
 		c.HtmlFile = defaultHtmlFile
 		log.Printf("config: setting HtmlFile to %v", c.HtmlFile)
 	}
@@ -70,6 +85,9 @@ func (c *config) setValid() error {
 		return errors.New("config: html template error\r\t-> " + err.Error())
 	}
 	if len(c.JwtKey) < 32 {
+		if !init {
+			return errors.New("config: JwtKey is too short")
+		}
 		log.Printf("config: JwtKey provided is too weak (%d), generating secure one...", len(c.JwtKey))
 		array, err := GenerateRand(64)
 		if err != nil {
@@ -81,25 +99,25 @@ func (c *config) setValid() error {
 }
 
 // load configuration from command line
-func LoadCommandeLineConfiguration() {
-	flag.StringVar(&configuration.ConfigurationFile, "conf", "", "Link configuration file, separated by comma.")
-	flag.BoolVar(&configuration.Debug, "d", false, "Show configuration information in log.")
+func (c *config) LoadCommandeLine() {
+	flag.StringVar(&c.ConfigurationFile, "conf", "", "Link configuration file, separated by comma.")
+	flag.BoolVar(&c.Debug, "d", false, "Show configuration information in log.")
 	flag.Parse()
 }
 
 // load configuration from file
-func LoadFileConfiguration(k *koanf.Koanf) (isDefault bool, err error) {
+func (c *config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
 	if k == nil {
 		return false, errors.New("config: no koanf provided")
 	}
 
 	// if no file provided, load form default location
 	isDefault = false
-	if configuration.ConfigurationFile == "" {
-		configuration.ConfigurationFile = defaultConfigurationFile
+	if c.ConfigurationFile == "" {
+		c.ConfigurationFile = defaultConfigurationFile
 		isDefault = true
 	}
-	return isDefault, k.Load(file.Provider(configuration.ConfigurationFile), yaml.Parser())
+	return isDefault, k.Load(file.Provider(c.ConfigurationFile), yaml.Parser())
 }
 
 // read configuration from file.
@@ -108,8 +126,8 @@ func LoadConfiguration() {
 
 	var k = koanf.New(".")
 
-	LoadCommandeLineConfiguration()
-	if d, err := LoadFileConfiguration(k); err != nil {
+	configuration.LoadCommandeLine()
+	if d, err := configuration.LoadFile(k); err != nil {
 		if !d {
 			log.Fatalf("config: error loading file\n\t-> " + err.Error())
 		}
@@ -121,8 +139,11 @@ func LoadConfiguration() {
 		log.Fatalf("config: error parsing configuration\n\t-> %v", err)
 	}
 
-	if err := configuration.setValid(); err != nil {
-		log.Fatalf("config: configuration is not valid\n\t-> %v", err)
+	if err := configuration.Valid(false); err != nil {
+		log.Printf("config: configuration is not valid\n\t-> %v", err)
+		if err := configuration.Valid(true); err != nil {
+			log.Fatalf("config: default configuration is not valid either\n\t-> %v", err)
+		}
 	}
 
 	log.Printf("Configuration loaded from file: %s", configuration.ConfigurationFile)

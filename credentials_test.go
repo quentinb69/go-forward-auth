@@ -100,7 +100,6 @@ func TestGetCredentialsFromHeader(t *testing.T) {
 	assert.Nil(c)
 
 	// no password
-	// no username
 	req.Header = *headersCredentials["nopassword"]
 	c, err = GetCredentialsFromHeader(req)
 	assert.ErrorContains(err, "error decoding header")

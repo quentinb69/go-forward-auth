@@ -79,14 +79,6 @@ func TestCreateJwt(t *testing.T) {
 			ExpectedCookieContains: "",
 			Claims:                 nil,
 		},
-		/*{
-			Name:                   "NO_RW",
-			ExpectedError:          true,
-			ExpectedErrorContains:  "claims: no responsewriter supplied",
-			ExpectedCookie:         false,
-			ExpectedCookieContains: "",
-			Claims:                 &Claims{},
-		},*/
 	}
 
 	for _, tc := range testCases {

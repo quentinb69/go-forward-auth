@@ -8,17 +8,17 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSetValid(t *testing.T) {
+func TestValid(t *testing.T) {
 	con := &config{}
-	err := con.setValid()
+	err := con.Valid(true)
 	assert.NoError(t, err)
 
 	con.HtmlFile = "bad_file"
-	err = con.setValid()
+	err = con.Valid(false)
 	assert.ErrorContains(t, err, "html template error")
 
 	con.HtmlFile = "main.go"
-	err = con.setValid()
+	err = con.Valid(false)
 	assert.NoError(t, err)
 	assert.Len(t, con.JwtKey, 64)
 	assert.NotEmpty(t, con.HtmlFile)
@@ -29,24 +29,25 @@ func TestSetValid(t *testing.T) {
 	assert.LessOrEqual(t, con.Port, uint(65534))
 
 	con.Tls = true
-	err = con.setValid()
+	err = con.Valid(false)
 	assert.ErrorContains(t, err, "please provide")
 
 	con.PrivateKey = "TEST"
-	err = con.setValid()
+	err = con.Valid(false)
 	assert.ErrorContains(t, err, "please provide")
 
 	con.Cert = "TEST"
-	err = con.setValid()
+	err = con.Valid(false)
 	assert.ErrorContains(t, err, "bad key pair")
 }
 
-func TestLoadCommandeLineConfiguration(t *testing.T) {
-
+func TestLoadCommandeLine(t *testing.T) {
+	t.Skip()
 }
 
-func TestLoadFileConfiguration(t *testing.T) {
+func TestLoadFile(t *testing.T) {
 	var k = koanf.New(".")
+
 	testCases := []struct {
 		Name                  string
 		ExpectedDefault       bool
@@ -85,8 +86,9 @@ func TestLoadFileConfiguration(t *testing.T) {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			configuration.ConfigurationFile = tc.File
-			d, err := LoadFileConfiguration(tc.Koanf)
+			c := &config{}
+			c.ConfigurationFile = tc.File
+			d, err := c.LoadFile(tc.Koanf)
 			assert.Equal(t, tc.ExpectedDefault, d)
 			if tc.ExpectedError {
 				assert.ErrorContains(t, err, tc.ExpectedErrorContains)
@@ -98,5 +100,5 @@ func TestLoadFileConfiguration(t *testing.T) {
 }
 
 func TestLoadConfiguration(t *testing.T) {
-
+	t.Skip()
 }
