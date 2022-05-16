@@ -111,16 +111,12 @@ var credentials = Credentials{
 }
 
 func TestMain(m *testing.M) {
-	configuration.Tls = false
-	configuration.Port = 80
 	configuration.CookieName = globCookieName
-	configuration.CookieDomain = "localhost"
-	configuration.TokenExpire = 10
-	configuration.TokenRefresh = 2
-	configuration.JwtKey = []byte("12345")
-	configuration.HtmlFile = "./default.index.html"
-	configuration.HashCost = 5
 	configuration.Users = map[string]string{globUsername: globBcrypt0000, globUsername + "H": globBcrypt1111}
+	configuration.setValid()
+
+	// need to do this after set valid because key is too weak
+	configuration.JwtKey = []byte("12345")
 
 	os.Exit(m.Run())
 }

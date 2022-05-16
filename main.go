@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	loadConfiguration()
+	LoadConfiguration()
 
 	http.HandleFunc("/", Home)
 	http.HandleFunc("/logout", Logout)
