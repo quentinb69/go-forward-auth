@@ -26,7 +26,7 @@ func TestRenderTemplate(t *testing.T) {
 		Name                 string
 		ExpectedHttpCode     int
 		ExpectedBodyContains string
-		Claims               Claims
+		Claims               *Claims
 		Ip                   string
 		State                string
 	}{
@@ -34,7 +34,7 @@ func TestRenderTemplate(t *testing.T) {
 			Name:                 "IN_NOCLAIMS",
 			ExpectedHttpCode:     999,
 			ExpectedBodyContains: "Welcome",
-			Claims:               Claims{},
+			Claims:               nil,
 			Ip:                   globValidIp,
 			State:                "in",
 		},
@@ -42,7 +42,7 @@ func TestRenderTemplate(t *testing.T) {
 			Name:                 "OUT_NOCLAIMS",
 			ExpectedHttpCode:     123,
 			ExpectedBodyContains: "Login</",
-			Claims:               Claims{},
+			Claims:               nil,
 			Ip:                   globValidIp,
 			State:                "out",
 		},
@@ -50,7 +50,7 @@ func TestRenderTemplate(t *testing.T) {
 			Name:                 "IN_CLAIMS",
 			ExpectedHttpCode:     789,
 			ExpectedBodyContains: "Welcome",
-			Claims:               claims,
+			Claims:               claims["valid"],
 			Ip:                   globValidIp,
 			State:                "in",
 		},
@@ -58,7 +58,7 @@ func TestRenderTemplate(t *testing.T) {
 			Name:                 "OUT_CLAIMS",
 			ExpectedHttpCode:     107,
 			ExpectedBodyContains: "Login</",
-			Claims:               Claims{},
+			Claims:               claims["valid"],
 			Ip:                   globValidIp,
 			State:                "out",
 		},
@@ -73,7 +73,7 @@ func TestRenderTemplate(t *testing.T) {
 			// make request
 			w := httptest.NewRecorder()
 			wr := http.ResponseWriter(w)
-			RenderTemplate(&wr, &tc.Claims, tc.Ip, tc.ExpectedHttpCode, tc.State)
+			RenderTemplate(&wr, tc.Claims, tc.Ip, tc.ExpectedHttpCode, tc.State)
 			resp := w.Result()
 			body, _ := io.ReadAll(resp.Body)
 
@@ -81,7 +81,7 @@ func TestRenderTemplate(t *testing.T) {
 			assert.Equal(t, tc.ExpectedHttpCode, resp.StatusCode)
 			assert.Contains(t, string(body), tc.ExpectedBodyContains)
 			assert.Contains(t, string(body), tc.Ip)
-			if claims.Username != "" && tc.State == "in" {
+			if tc.Claims != nil && tc.Claims.Username != "" && tc.State == "in" {
 				assert.Contains(t, string(body), tc.Claims.Username)
 			}
 		})
