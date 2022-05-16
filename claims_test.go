@@ -117,6 +117,10 @@ func TestCreateJwt(t *testing.T) {
 			}
 		})
 	}
+
+	// No response writer
+	err = CreateJwt(nil, nil)
+	assert.ErrorContains(t, err, "no responsewriter")
 }
 
 func TestCreateClaims(t *testing.T) {
