@@ -67,18 +67,42 @@ var cookiesClaims = map[string]*http.Cookie{
 	"valid":     {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.WywXK85ZPjbKwvhviTXcyHOfKMH4gsaPAjHQN_kF-z4"},
 }
 
-var claims = Claims{
-	Username: globUsername,
-	Ip:       globValidIp,
-	RegisteredClaims: jwt.RegisteredClaims{
-		ID:        "999",
-		ExpiresAt: jwt.NewNumericDate(time.Unix(999999999999999999, 0)),
-		Issuer:    "ISSUER",
-		Audience:  jwt.ClaimStrings{"http://localhost"},
-		IssuedAt:  jwt.NewNumericDate(time.Unix(1, 0)),
-		NotBefore: jwt.NewNumericDate(time.Unix(1, 0)),
-	},
+var claims = map[string]*Claims{
+	"valid": {
+		Username: globUsername,
+		Ip:       globValidIp,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "999",
+			ExpiresAt: jwt.NewNumericDate(time.Unix(999999999999999999, 0)),
+			Issuer:    "ISSUER",
+			Audience:  jwt.ClaimStrings{"http://localhost"},
+			IssuedAt:  jwt.NewNumericDate(time.Unix(1, 0)),
+			NotBefore: jwt.NewNumericDate(time.Unix(1, 0)),
+		}},
+	"expired": {
+		Username: globUsername,
+		Ip:       globValidIp,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "999",
+			ExpiresAt: jwt.NewNumericDate(time.Unix(1, 0)),
+			Issuer:    "ISSUER",
+			Audience:  jwt.ClaimStrings{"http://localhost"},
+			IssuedAt:  jwt.NewNumericDate(time.Unix(1, 0)),
+			NotBefore: jwt.NewNumericDate(time.Unix(1, 0)),
+		}},
+	"nousername": {
+		Username: "",
+		Ip:       globValidIp,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ID:        "999",
+			ExpiresAt: jwt.NewNumericDate(time.Unix(1, 0)),
+			Issuer:    "ISSUER",
+			Audience:  jwt.ClaimStrings{"http://localhost"},
+			IssuedAt:  jwt.NewNumericDate(time.Unix(1, 0)),
+			NotBefore: jwt.NewNumericDate(time.Unix(1, 0)),
+		}},
 }
+
 var credentials = Credentials{
 	Username: globUsername,
 	Password: globPassword,

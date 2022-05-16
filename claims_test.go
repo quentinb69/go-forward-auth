@@ -2,15 +2,18 @@ package main
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestIsValidIp(t *testing.T) {
 	assert := assert.New(t)
 
-	c := claims
+	c := claims["valid"]
 	ret := c.IsValidIp(globOtherIp)
 	assert.False(ret)
 	ret = c.IsValidIp(globValidIp)
@@ -18,28 +21,102 @@ func TestIsValidIp(t *testing.T) {
 }
 
 func TestCreateJwt(t *testing.T) {
-	//TODO test reponse containing cookie
-	assert := assert.New(t)
-	backup := configuration.CookieName
-	configuration.CookieName = "" //TODO must be "", if not panic...
-	defer func() { configuration.CookieName = backup }()
+	// create jwt
+	refreshClaims, err := CreateClaims(&credentials, globValidIp)
+	assert.NoError(t, err)
+	refreshClaims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(configuration.TokenRefresh * time.Minute))
 
-	w := new(http.ResponseWriter)
-	c := claims
+	// Create jwt token and sign it
+	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
+	refreshTokenString, _ := refreshToken.SignedString(configuration.JwtKey)
+	refreshCookie := &http.Cookie{Name: globCookieName, Value: refreshTokenString}
 
-	// errors
-	err := CreateJwt(w, nil)
-	assert.EqualError(err, "claims: no claims supplied")
-	err = CreateJwt(nil, &c)
-	assert.EqualError(err, "claims: no responsewriter supplied")
+	testCases := []struct {
+		Name                   string
+		ExpectedError          bool
+		ExpectedErrorContains  string
+		ExpectedCookie         bool
+		ExpectedCookieContains string
+		Claims                 *Claims
+	}{
+		{
+			Name:                   "CREATED",
+			ExpectedError:          false,
+			ExpectedErrorContains:  "",
+			ExpectedCookie:         true,
+			ExpectedCookieContains: "",
+			Claims:                 claims["valid"],
+		},
+		{
+			Name:                   "EXTENDED",
+			ExpectedError:          false,
+			ExpectedErrorContains:  "",
+			ExpectedCookie:         true,
+			ExpectedCookieContains: "",
+			Claims:                 claims["valid"],
+		},
+		{
+			Name:                   "INVALID_CLAIMS",
+			ExpectedError:          true,
+			ExpectedErrorContains:  "expired",
+			ExpectedCookie:         false,
+			ExpectedCookieContains: "",
+			Claims:                 claims["expired"],
+		},
+		{
+			Name:                   "MISSING_DATA_CLAIMS",
+			ExpectedError:          true,
+			ExpectedErrorContains:  "missing",
+			ExpectedCookie:         false,
+			ExpectedCookieContains: "",
+			Claims:                 claims["nousername"],
+		},
+		{
+			Name:                   "NO_CLAIMS",
+			ExpectedError:          true,
+			ExpectedErrorContains:  "claims: no claims supplied",
+			ExpectedCookie:         false,
+			ExpectedCookieContains: "",
+			Claims:                 nil,
+		},
+		/*{
+			Name:                   "NO_RW",
+			ExpectedError:          true,
+			ExpectedErrorContains:  "claims: no responsewriter supplied",
+			ExpectedCookie:         false,
+			ExpectedCookieContains: "",
+			Claims:                 &Claims{},
+		},*/
+	}
 
-	// extend test
-	err = CreateJwt(w, &c)
-	assert.NoError(err)
+	for _, tc := range testCases {
+		// shadow
+		tc := tc
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 
-	// created
-	err = CreateJwt(w, &c)
-	assert.NoError(err)
+			// make request
+			w := httptest.NewRecorder()
+			wr := http.ResponseWriter(w)
+			err := CreateJwt(&wr, tc.Claims)
+			resp := w.Result()
+			cook := resp.Cookies()
+
+			// assert
+			if tc.ExpectedError {
+				assert.ErrorContains(t, err, tc.ExpectedErrorContains)
+			} else {
+				assert.NoError(t, err)
+			}
+
+			if tc.ExpectedCookie {
+				assert.NotEmpty(t, cook)
+				assert.NotEqual(t, refreshCookie, cook[len(cook)-1])
+			} else {
+				assert.Empty(t, cook)
+			}
+		})
+	}
 }
 
 func TestCreateClaims(t *testing.T) {
@@ -48,20 +125,24 @@ func TestCreateClaims(t *testing.T) {
 	c := claims
 	cr := credentials
 
+	// created
+	ret, err := CreateClaims(&cr, globValidIp)
+	assert.NotEqual(*ret, c)
+	assert.Equal(cr.Username, ret.Username)
+	assert.Equal(globValidIp, ret.Ip)
+	assert.NoError(err)
+
 	// errors
-	ret, err := CreateClaims(nil, "")
+	ret, err = CreateClaims(nil, "")
 	assert.EqualError(err, "claims: no credentials supplied")
 	assert.Nil(ret)
 	ret, err = CreateClaims(&cr, "")
 	assert.EqualError(err, "claims: no ip provided")
 	assert.Nil(ret)
-
-	// created
-	ret, err = CreateClaims(&cr, globValidIp)
-	assert.NotEqual(*ret, c)
-	assert.Equal(cr.Username, ret.Username)
-	assert.Equal(globValidIp, ret.Ip)
-	assert.NoError(err)
+	cr.Username = "Invalid"
+	ret, err = CreateClaims(&cr, "")
+	assert.ErrorContains(err, "credentials")
+	assert.Nil(ret)
 }
 
 func TestGetClaims(t *testing.T) {
