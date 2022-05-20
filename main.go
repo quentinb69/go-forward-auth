@@ -8,7 +8,9 @@ import (
 
 func main() {
 
-	LoadConfiguration()
+	if err := LoadGlobalConfiguration(); err != nil {
+		log.Fatal("main: error loading configuration\n\t-> " + err.Error())
+	}
 
 	http.HandleFunc("/", Home)
 	http.HandleFunc("/logout", Logout)

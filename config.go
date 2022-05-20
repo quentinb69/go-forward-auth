@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"time"
@@ -37,9 +38,6 @@ var configuration config
 
 // validate data, and set default values if init is true
 func (c *config) Valid(init bool) error {
-	if c.Tls && (c.PrivateKey == "" || c.Cert == "") {
-		return errors.New("config: if Tls is true, please provide PrivateKey and Cert")
-	}
 	if c.Tls {
 		_, err := tls.LoadX509KeyPair(c.Cert, c.PrivateKey)
 		if err != nil {
@@ -62,14 +60,14 @@ func (c *config) Valid(init bool) error {
 	}
 	if c.TokenExpire < 1 {
 		if !init {
-			return errors.New("config: TokenExpire is too short")
+			return errors.New("config: TokenExpire is too small")
 		}
 		c.TokenExpire = 90
 		log.Printf("config: setting TokenExpire to %v", c.TokenExpire)
 	}
 	if c.TokenRefresh < 1 {
 		if !init {
-			return errors.New("config: TokenRefresh is too short")
+			return errors.New("config: TokenRefresh is too small")
 		}
 		c.TokenRefresh = 2
 		log.Printf("config: setting TokenRefresh to %v", c.TokenRefresh)
@@ -86,7 +84,7 @@ func (c *config) Valid(init bool) error {
 	}
 	if len(c.JwtKey) < 32 {
 		if !init {
-			return errors.New("config: JwtKey is too short")
+			return errors.New("config: JwtKey is too small")
 		}
 		log.Printf("config: JwtKey provided is too weak (%d), generating secure one...", len(c.JwtKey))
 		array, err := GenerateRand(64)
@@ -100,9 +98,23 @@ func (c *config) Valid(init bool) error {
 
 // load configuration from command line
 func (c *config) LoadCommandeLine() {
-	flag.StringVar(&c.ConfigurationFile, "conf", "", "Link configuration file, separated by comma.")
-	flag.BoolVar(&c.Debug, "d", false, "Show configuration information in log.")
+
+	if flag.Lookup("conf") == nil {
+		flag.StringVar(&c.ConfigurationFile, "conf", "", "Link configuration file, separated by comma.")
+	}
+
+	if flag.Lookup("d") == nil {
+		flag.BoolVar(&c.Debug, "d", false, "Show configuration information in log.")
+	}
+
 	flag.Parse()
+
+	if c.Debug {
+		log.Println("Flag passed : ")
+		flag.VisitAll(func(f *flag.Flag) {
+			fmt.Printf("\t-> %s: %s\n", f.Name, f.Value)
+		})
+	}
 }
 
 // load configuration from file
@@ -122,35 +134,39 @@ func (c *config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
 
 // read configuration from file.
 // If file is flag is supplied by flag load it, if not load defined arbitrary path
-func LoadConfiguration() {
+func LoadGlobalConfiguration() (err error) {
 
 	var k = koanf.New(".")
+	c := &config{}
 
-	configuration.LoadCommandeLine()
-	if d, err := configuration.LoadFile(k); err != nil {
+	c.LoadCommandeLine()
+	if d, err := c.LoadFile(k); err != nil {
 		if !d {
-			log.Fatalf("config: error loading file\n\t-> " + err.Error())
+			return errors.New("config: error loading file\n\t-> " + err.Error())
 		}
 		log.Printf("config: error loading default file\n\t-> " + err.Error())
 	}
 
 	// parse configuration in global configuration var
-	if err := k.Unmarshal("", &configuration); err != nil {
-		log.Fatalf("config: error parsing configuration\n\t-> %v", err)
+	if err := k.Unmarshal("", &c); err != nil {
+		return errors.New("config: error parsing configuration\n\t-> " + err.Error())
 	}
 
-	if err := configuration.Valid(false); err != nil {
+	if err := c.Valid(false); err != nil {
 		log.Printf("config: configuration is not valid\n\t-> %v", err)
-		if err := configuration.Valid(true); err != nil {
-			log.Fatalf("config: default configuration is not valid either\n\t-> %v", err)
+		if err := c.Valid(true); err != nil {
+			return errors.New("config: default configuration is not valid either\n\t-> " + err.Error())
 		}
 	}
 
 	log.Printf("Configuration loaded from file: %s", configuration.ConfigurationFile)
 
 	// print configuration values
-	if configuration.Debug {
+	if c.Debug {
 		log.Printf("Configuration read:\n\t%v", k)
-		log.Printf("Configuration parsed:\n\t%v", configuration)
+		log.Printf("Configuration parsed:\n\t%v", c)
 	}
+
+	configuration = *c
+	return nil
 }
