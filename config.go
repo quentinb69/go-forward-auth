@@ -15,20 +15,29 @@ import (
 )
 
 type config struct {
-	Tls               bool              `koanf:"Tls"`
-	PrivateKey        string            `koanf:"PrivateKey"`
-	Cert              string            `koanf:"Cert"`
-	Port              uint              `koanf:"Port"`
-	CookieDomain      string            `koanf:"CookieDomain"`
-	CookieName        string            `koanf:"CookieName"`
-	TokenExpire       time.Duration     `koanf:"TokenExpire"`
-	TokenRefresh      time.Duration     `koanf:"TokenRefresh"`
-	HtmlFile          string            `koanf:"HtmlFile"`
-	JwtKey            []byte            `koanf:"JwtKey"`
-	HashCost          int               `koanf:"HashCost"`
-	Users             map[string]string `koanf:"Users"`
-	Debug             bool              `koanf:"Debug"`
+	Tls               bool          `koanf:"Tls"`
+	PrivateKey        string        `koanf:"PrivateKey"`
+	Cert              string        `koanf:"Cert"`
+	Port              uint          `koanf:"Port"`
+	CookieDomain      string        `koanf:"CookieDomain"`
+	CookieName        string        `koanf:"CookieName"`
+	TokenExpire       time.Duration `koanf:"TokenExpire"`
+	TokenRefresh      time.Duration `koanf:"TokenRefresh"`
+	HtmlFile          string        `koanf:"HtmlFile"`
+	JwtKey            []byte        `koanf:"JwtKey"`
+	HashCost          int           `koanf:"HashCost"`
+	Users             map[string]string
+	Debug             bool            `koanf:"Debug"`
+	Userfile          string          `koanf:"Userfile"`
+	Users2            map[string]user `koanf:"Users"`
 	ConfigurationFile string
+}
+
+type user struct {
+	Name           string   `koanf:"Name"`
+	Password       string   `koanf:"Password"`
+	IsAdmin        bool     `koanf:"IsAdmin"`
+	AllowedDomains []string `koanf:"Userfile"`
 }
 
 const defaultConfigurationFile = "default.config.yml"
@@ -134,10 +143,7 @@ func (c *config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
 
 // read configuration from file.
 // If file is flag is supplied by flag load it, if not load defined arbitrary path
-func LoadGlobalConfiguration() (err error) {
-
-	var k = koanf.New(".")
-	c := &config{}
+func (c *config) Load(k *koanf.Koanf) (err error) {
 
 	c.LoadCommandeLine()
 	if d, err := c.LoadFile(k); err != nil {

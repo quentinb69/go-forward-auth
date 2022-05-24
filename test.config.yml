@@ -1,0 +1,29 @@
+---
+# Listen port
+Port: 9999
+
+# HTTPS settings (Tls to false means HTTP)
+Tls: false
+#PrivateKey: /opt/gfa/ssl/server.key
+#Certificate: /opt/gfa/ssl/server.crt
+
+# Cookie and session configuration
+#CookieDomain: "mydomain.com" # leave empty to disable sso
+CookieName: "COOK"
+TokenExpire: 90 # jwt expiration delay in minutes
+TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (0 to disable refresh)
+
+# template file for login/out
+HtmlFile: default.index.html
+
+# key to sign jwt. If not provided, will be generated
+JwtSecretKey: "1111111111.1111111111.1111111111.1111111111.1111111111"
+
+# number fo bcrypt iterations (default 10) (not used yet)
+#HashCost: 10
+
+# enable some debug output
+Debug: true
+
+# file containing users and groups
+Userfile: ./test.users.yml

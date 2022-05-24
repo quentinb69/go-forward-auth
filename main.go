@@ -4,11 +4,16 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"github.com/knadh/koanf"
 )
 
 func main() {
 
-	if err := LoadGlobalConfiguration(); err != nil {
+	var k = koanf.New(".")
+	configuration := &config{}
+
+	if err := configuration.Load(k); err != nil {
 		log.Fatal("main: error loading configuration\n\t-> " + err.Error())
 	}
 

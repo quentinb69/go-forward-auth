@@ -277,17 +277,16 @@ func TestLoadFile(t *testing.T) {
 	}
 }
 
-func TestLoadConfiguration(t *testing.T) {
-	t.Skip()
-	//TODO
-	backup := configuration
-	defer func() { configuration = backup }()
+func TestLoad(t *testing.T) {
 
-	newConf := &config{}
-	configuration = *newConf
+	c := &config{}
+	k := koanf.New(".")
+	c.LoadCommandeLine() // init
+	assert.False(t, c.Debug)
+	assert.Empty(t, c.ConfigurationFile)
 
 	// bad file
 	flag.Set("conf", "./BAD_FILE")
-	err := LoadGlobalConfiguration()
+	err := c.Load(k)
 	assert.ErrorContains(t, err, "error loading file")
 }
