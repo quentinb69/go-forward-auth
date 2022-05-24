@@ -5,7 +5,7 @@ Port: 443
 # HTTPS settings (Tls to false means HTTP)
 Tls: true
 PrivateKey: /opt/gfa/ssl/server.key
-Cert: /opt/gfa/ssl/server.crt
+Certificate: /opt/gfa/ssl/server.crt
 
 # Cookie and session configuration
 #CookieDomain: "mydomain.com" # leave empty to disable sso
@@ -17,7 +17,7 @@ TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (
 #HtmlFile: /opt/gfa/default.index.html
 
 # key to sign jwt. If not provided, will be generated
-#JwtKey: "my_secret_key"
+#JwtSecretKey: "my_secret_key"
 
 # number fo bcrypt iterations (default 10) (not used yet)
 #HashCost: 10

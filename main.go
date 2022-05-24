@@ -6,14 +6,17 @@ import (
 	"net/http"
 
 	"github.com/knadh/koanf"
+	flag "github.com/spf13/pflag"
 )
 
 func main() {
 
-	var k = koanf.New(".")
+	k := koanf.New(".")
+	f := flag.NewFlagSet("config", flag.ContinueOnError)
+
 	configuration := &config{}
 
-	if err := configuration.Load(k); err != nil {
+	if err := configuration.Load(k, f); err != nil {
 		log.Fatal("main: error loading configuration\n\t-> " + err.Error())
 	}
 
@@ -27,6 +30,6 @@ func main() {
 	if !configuration.Tls {
 		log.Fatal(http.ListenAndServe(port, nil))
 	} else {
-		log.Fatal(http.ListenAndServeTLS(port, configuration.Cert, configuration.PrivateKey, nil))
+		log.Fatal(http.ListenAndServeTLS(port, configuration.Certificate, configuration.PrivateKey, nil))
 	}
 }

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"flag"
 	"testing"
 	"time"
+
+	flag "github.com/spf13/pflag" // POSIX compliant
 
 	"github.com/knadh/koanf"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +22,7 @@ func TestValid(t *testing.T) {
 		SetCert               string
 		SetHtmlFile           string
 		SetBadPort            uint
-		SetJwtKey             []byte
+		SetJwtSecretKey       []byte
 		SetCookieName         string
 		SetTokenRefresh       time.Duration
 		SetTokenExpire        time.Duration
@@ -85,11 +86,11 @@ func TestValid(t *testing.T) {
 			SetCert:               "TEST",
 		},
 		{
-			Name:                  "INVALIDJWTKEY_NOINIT",
+			Name:                  "INVALIDJwtSecretKey_NOINIT",
 			ExpectedError:         true,
-			ExpectedErrorContains: "JwtKey is too small",
+			ExpectedErrorContains: "JwtSecretKey is too small",
 			InitializeConfig:      true,
-			SetJwtKey:             []byte("123"),
+			SetJwtSecretKey:       []byte("123"),
 		},
 		{
 			Name:                  "INVALIDCOOKIENAME_NOINIT",
@@ -145,7 +146,7 @@ func TestValid(t *testing.T) {
 			case tc.SetTls:
 				c.Tls = tc.SetTls
 			case tc.SetCert != "":
-				c.Cert = tc.SetCert
+				c.Certificate = tc.SetCert
 			case tc.SetPrivateKey != "":
 				c.PrivateKey = tc.SetPrivateKey
 			case tc.SetBadPort != 0:
@@ -154,10 +155,10 @@ func TestValid(t *testing.T) {
 				c.HtmlFile = ""
 			case tc.SetHtmlFile != "":
 				c.HtmlFile = tc.SetHtmlFile
-			case len(tc.SetJwtKey) != 0:
-				c.JwtKey = tc.SetJwtKey
-			case len(tc.SetJwtKey) != 0:
-				c.JwtKey = tc.SetJwtKey
+			case len(tc.SetJwtSecretKey) != 0:
+				c.JwtSecretKey = tc.SetJwtSecretKey
+			case len(tc.SetJwtSecretKey) != 0:
+				c.JwtSecretKey = tc.SetJwtSecretKey
 			case tc.SetTokenExpire != 0:
 				c.TokenExpire = tc.SetTokenExpire
 			case tc.SetTokenRefresh != 0:
@@ -175,7 +176,7 @@ func TestValid(t *testing.T) {
 				assert.ErrorContains(t, err, tc.ExpectedErrorContains)
 			} else {
 				assert.NoError(t, err)
-				assert.Len(t, c.JwtKey, 64)
+				assert.Len(t, c.JwtSecretKey, 64)
 				assert.NotEmpty(t, c.HtmlFile)
 				assert.NotEmpty(t, c.CookieName)
 				assert.GreaterOrEqual(t, c.TokenExpire, time.Duration(1))
@@ -188,38 +189,39 @@ func TestValid(t *testing.T) {
 }
 
 func TestLoadCommandeLine(t *testing.T) {
+	c := &config{}
+	f := flag.NewFlagSet("config", flag.ContinueOnError)
 
 	// no flag
-	c := &config{}
-	c.LoadCommandeLine()
+	c.LoadCommandeLine(f)
 	assert.Empty(t, c.Debug)
 	assert.Empty(t, c.ConfigurationFile)
 
 	// inexistent flag
-	if err := flag.Set("NOPE", "NOPE"); err != nil {
+	if err := f.Set("NOPE", "NOPE"); err != nil {
 		assert.Error(t, err)
 	}
-	c.LoadCommandeLine()
+	c.LoadCommandeLine(f)
 	assert.Empty(t, c.Debug)
 	assert.Empty(t, c.ConfigurationFile)
 
 	// debug flag
-	if err := flag.Set("d", "True"); err != nil {
+	if err := f.Set("d", "True"); err != nil {
 		assert.NoError(t, err)
 		t.FailNow() // panic if no fail
 	}
-	c.LoadCommandeLine()
+	c.LoadCommandeLine(f)
 	assert.True(t, c.Debug)
 	assert.Empty(t, c.ConfigurationFile)
 
 	// conf flag
-	if err := flag.Set("conf", "test"); err != nil {
+	if err := f.Set("conf", "test"); err != nil {
 		assert.NoError(t, err)
 		t.FailNow() // panic if no fail
 	}
-	c.LoadCommandeLine()
+	c.LoadCommandeLine(f)
 	assert.True(t, c.Debug)
-	assert.Equal(t, "test", c.ConfigurationFile)
+	assert.Equal(t, []string{"test"}, c.ConfigurationFile)
 }
 
 func TestLoadFile(t *testing.T) {
@@ -230,7 +232,7 @@ func TestLoadFile(t *testing.T) {
 		ExpectedDefault       bool
 		ExpectedError         bool
 		ExpectedErrorContains string
-		File                  string
+		Files                 []string
 		Koanf                 *koanf.Koanf
 	}{
 		{
@@ -238,7 +240,7 @@ func TestLoadFile(t *testing.T) {
 			ExpectedDefault:       true,
 			ExpectedError:         false,
 			ExpectedErrorContains: "",
-			File:                  "",
+			Files:                 []string{},
 			Koanf:                 k,
 		},
 		{
@@ -246,7 +248,7 @@ func TestLoadFile(t *testing.T) {
 			ExpectedDefault:       false,
 			ExpectedError:         true,
 			ExpectedErrorContains: "open bad_file",
-			File:                  "bad_file",
+			Files:                 []string{"bad_file"},
 			Koanf:                 k,
 		},
 		{
@@ -254,17 +256,41 @@ func TestLoadFile(t *testing.T) {
 			ExpectedDefault:       false,
 			ExpectedError:         true,
 			ExpectedErrorContains: "no koanf",
-			File:                  "",
+			Files:                 []string{""},
 			Koanf:                 nil,
+		},
+		{
+			Name:                  "OK",
+			ExpectedDefault:       false,
+			ExpectedError:         false,
+			ExpectedErrorContains: "",
+			Files:                 []string{"test.config.yml"},
+			Koanf:                 k,
+		},
+		{
+			Name:                  "MULTIPLE",
+			ExpectedDefault:       false,
+			ExpectedError:         false,
+			ExpectedErrorContains: "",
+			Files:                 []string{"test.config.yml", "default.config.yml"},
+			Koanf:                 k,
+		},
+		{
+			Name:                  "MULTIPLEKO",
+			ExpectedDefault:       false,
+			ExpectedError:         true,
+			ExpectedErrorContains: "",
+			Files:                 []string{"test.config.yml", "TOT"},
+			Koanf:                 k,
 		},
 	}
 	for _, tc := range testCases {
 		// shadow
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()
 			c := &config{}
-			c.ConfigurationFile = tc.File
+			c.ConfigurationFile = tc.Files
 			d, err := c.LoadFile(tc.Koanf)
 			assert.Equal(t, tc.ExpectedDefault, d)
 			if tc.ExpectedError {
@@ -279,14 +305,16 @@ func TestLoadFile(t *testing.T) {
 
 func TestLoad(t *testing.T) {
 
+	f := flag.NewFlagSet("config", flag.ContinueOnError)
+
 	c := &config{}
 	k := koanf.New(".")
-	c.LoadCommandeLine() // init
+	c.LoadCommandeLine(f) // init
 	assert.False(t, c.Debug)
 	assert.Empty(t, c.ConfigurationFile)
 
 	// bad file
-	flag.Set("conf", "./BAD_FILE")
-	err := c.Load(k)
+	f.Set("conf", "./BAD_FILE")
+	err := c.Load(k, f)
 	assert.ErrorContains(t, err, "error loading file")
 }

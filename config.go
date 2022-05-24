@@ -3,11 +3,12 @@ package main
 import (
 	"crypto/tls"
 	"errors"
-	"flag"
 	"fmt"
 	"log"
 	"os"
 	"time"
+
+	flag "github.com/spf13/pflag" // POSIX compliant
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
@@ -17,20 +18,20 @@ import (
 type config struct {
 	Tls               bool          `koanf:"Tls"`
 	PrivateKey        string        `koanf:"PrivateKey"`
-	Cert              string        `koanf:"Cert"`
+	Certificate       string        `koanf:"Certificate"`
 	Port              uint          `koanf:"Port"`
 	CookieDomain      string        `koanf:"CookieDomain"`
 	CookieName        string        `koanf:"CookieName"`
 	TokenExpire       time.Duration `koanf:"TokenExpire"`
 	TokenRefresh      time.Duration `koanf:"TokenRefresh"`
 	HtmlFile          string        `koanf:"HtmlFile"`
-	JwtKey            []byte        `koanf:"JwtKey"`
+	JwtSecretKey      []byte        `koanf:"JwtSecretKey"`
 	HashCost          int           `koanf:"HashCost"`
 	Users             map[string]string
 	Debug             bool            `koanf:"Debug"`
-	Userfile          string          `koanf:"Userfile"`
+	UserFile          string          `koanf:"UserFile"`
 	Users2            map[string]user `koanf:"Users"`
-	ConfigurationFile string
+	ConfigurationFile []string
 }
 
 type user struct {
@@ -43,12 +44,16 @@ type user struct {
 const defaultConfigurationFile = "default.config.yml"
 const defaultHtmlFile = "default.index.html"
 
-var configuration config
+var configuration *config
 
 // validate data, and set default values if init is true
 func (c *config) Valid(init bool) error {
+	if c == nil {
+		return errors.New("config: no configuration provided")
+	}
+
 	if c.Tls {
-		_, err := tls.LoadX509KeyPair(c.Cert, c.PrivateKey)
+		_, err := tls.LoadX509KeyPair(c.Certificate, c.PrivateKey)
 		if err != nil {
 			return errors.New("config: bad key pair\r\t-> " + err.Error())
 		}
@@ -91,61 +96,76 @@ func (c *config) Valid(init bool) error {
 	if _, err := os.Stat(c.HtmlFile); err != nil {
 		return errors.New("config: html template error\r\t-> " + err.Error())
 	}
-	if len(c.JwtKey) < 32 {
+	if len(c.JwtSecretKey) < 32 {
 		if !init {
-			return errors.New("config: JwtKey is too small")
+			return errors.New("config: JwtSecretKey is too small")
 		}
-		log.Printf("config: JwtKey provided is too weak (%d), generating secure one...", len(c.JwtKey))
+		log.Printf("config: JwtSecretKey provided is too weak (%d), generating secure one...", len(c.JwtSecretKey))
 		array, err := GenerateRand(64)
 		if err != nil {
-			return errors.New("config : error generating JwtKey\n\t-> " + err.Error())
+			return errors.New("config : error generating JwtSecretKey\n\t-> " + err.Error())
 		}
-		c.JwtKey = *array
+		c.JwtSecretKey = *array
 	}
 	return nil
 }
 
 // load configuration from command line
-func (c *config) LoadCommandeLine() {
-
-	if flag.Lookup("conf") == nil {
-		flag.StringVar(&c.ConfigurationFile, "conf", "", "Link configuration file, separated by comma.")
+func (c *config) LoadCommandeLine(f *flag.FlagSet) error {
+	if c == nil {
+		return errors.New("config: no configuration provided")
 	}
 
-	if flag.Lookup("d") == nil {
-		flag.BoolVar(&c.Debug, "d", false, "Show configuration information in log.")
+	f.Usage = func() {
+		fmt.Println(f.FlagUsages())
+		os.Exit(0)
 	}
 
-	flag.Parse()
-
-	if c.Debug {
-		log.Println("Flag passed : ")
-		flag.VisitAll(func(f *flag.Flag) {
-			fmt.Printf("\t-> %s: %s\n", f.Name, f.Value)
-		})
+	if !f.HasFlags() {
+		f.StringSlice("conf", c.ConfigurationFile, "Link to one or more configurations files.")
+		f.Bool("d", c.Debug, "Enable some debbug log.")
 	}
+
+	f.Parse(os.Args[1:])
+
+	c.Debug, _ = f.GetBool("d")
+	c.ConfigurationFile, _ = f.GetStringSlice("conf")
+
+	return nil
 }
 
 // load configuration from file
 func (c *config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
-	if k == nil {
-		return false, errors.New("config: no koanf provided")
+	if k == nil || c == nil {
+		return false, errors.New("config: no koanf nor configuration provided")
 	}
 
 	// if no file provided, load form default location
 	isDefault = false
-	if c.ConfigurationFile == "" {
-		c.ConfigurationFile = defaultConfigurationFile
+	if len(c.ConfigurationFile) == 0 {
+		c.ConfigurationFile = []string{defaultConfigurationFile}
 		isDefault = true
 	}
-	return isDefault, k.Load(file.Provider(c.ConfigurationFile), yaml.Parser())
+
+	for _, f := range c.ConfigurationFile {
+		if err := k.Load(file.Provider(f), yaml.Parser()); err != nil {
+			return isDefault, err
+		}
+	}
+	return isDefault, nil
 }
 
 // read configuration from file.
 // If file is flag is supplied by flag load it, if not load defined arbitrary path
-func (c *config) Load(k *koanf.Koanf) (err error) {
+func (c *config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
+	if c == nil {
+		return errors.New("config: no configuration provided")
+	}
 
-	c.LoadCommandeLine()
+	if err := c.LoadCommandeLine(f); err != nil {
+		return errors.New("config: error loading command line\n\t-> " + err.Error())
+	}
+
 	if d, err := c.LoadFile(k); err != nil {
 		if !d {
 			return errors.New("config: error loading file\n\t-> " + err.Error())
@@ -154,7 +174,7 @@ func (c *config) Load(k *koanf.Koanf) (err error) {
 	}
 
 	// parse configuration in global configuration var
-	if err := k.Unmarshal("", &c); err != nil {
+	if err := k.Unmarshal("", c); err != nil {
 		return errors.New("config: error parsing configuration\n\t-> " + err.Error())
 	}
 
@@ -173,6 +193,5 @@ func (c *config) Load(k *koanf.Koanf) (err error) {
 		log.Printf("Configuration parsed:\n\t%v", c)
 	}
 
-	configuration = *c
 	return nil
 }

@@ -72,7 +72,7 @@ func CreateJwt(w *http.ResponseWriter, claims *Claims) (err error) {
 
 	// Create jwt token and sign it
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, _ := token.SignedString(configuration.JwtKey)
+	tokenString, _ := token.SignedString(configuration.JwtSecretKey)
 
 	// Add or update cookie
 	http.SetCookie(*w, &http.Cookie{
@@ -111,7 +111,7 @@ func GetClaims(r *http.Request, ip string) (claims *Claims, err error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return configuration.JwtKey, nil
+		return configuration.JwtSecretKey, nil
 	})
 
 	// Validate jwt

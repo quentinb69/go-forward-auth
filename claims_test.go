@@ -28,7 +28,7 @@ func TestCreateJwt(t *testing.T) {
 
 	// Create jwt token and sign it
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenString, _ := refreshToken.SignedString(configuration.JwtKey)
+	refreshTokenString, _ := refreshToken.SignedString(configuration.JwtSecretKey)
 	refreshCookie := &http.Cookie{Name: globCookieName, Value: refreshTokenString}
 
 	testCases := []struct {

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/knadh/koanf"
+	flag "github.com/spf13/pflag"
 )
 
 // Crypted password
@@ -62,9 +64,9 @@ var cookiesClaims = map[string]*http.Cookie{
 	"fake":      {Name: globCookieName, Value: "FAKE"},
 	"badalgo":   {Name: globCookieName, Value: "eyJ0eXAiOiJKV1QiLCJhbGciOiJub25lIn0.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.WywXK85ZPjbKwvhviTXcyHOfKMH4gsaPAjHQN_kF-z4"},
 	"altered":   {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRla3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjoyLCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.qPYxT0mlE9uKorGLdLC6FLYFjAeRlH56-pVl75PnRyF"},
-	"expired":   {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjoyLCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.qPYxT0mlE9uKorGLdLC6FLYFjAeRlH56-pVl75PnRyE"},
-	"invalidIp": {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjguNS43LjUiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.tUHEqbShd0AyNtLPoUCbOQ4b1ZL-ROhh3C-RGVHCq84"},
-	"valid":     {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.WywXK85ZPjbKwvhviTXcyHOfKMH4gsaPAjHQN_kF-z4"},
+	"expired":   {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6Ijk5Ljk5Ljk5Ljk5IiwiaXNzIjoiZ2ZhIiwiYXVkIjpbImh0dHBzOi8vbG9jYWxob3N0Il0sImV4cCI6MiwibmJmIjoxLCJpYXQiOjEsImp0aSI6ImU0UXZlM3l4cFJMZldEOFREaFlMZGRYYnlSaVZ3Q3RhZXgydVQ3WnEifQ.i2LliIzmYixMYZo2VeYjO5mKevg0DeJeusnhq9yQHN8"},
+	"invalidIp": {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6Ijk5Ljk5Ljk5Ljk5IiwiaXNzIjoiZ2ZhIiwiYXVkIjpbImh0dHBzOi8vbG9jYWxob3N0Il0sImV4cCI6OTk5OTk5OTk5OSwibmJmIjoxLCJpYXQiOjEsImp0aSI6ImU0UXZlM3l4cFJMZldEOFREaFlMZGRYYnlSaVZ3Q3RhZXgydVQ3WnEifQ.3AjgCNrAoSZfXpOTR-PzFnQwvomxPzkUZ2XFHQPUu6Q"},
+	"valid":     {Name: globCookieName, Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJVc2VybmFtZSI6IlRlc3QiLCJJcCI6IjEuMi4zLjQiLCJpc3MiOiJnZmEiLCJhdWQiOlsiaHR0cHM6Ly9sb2NhbGhvc3QiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoiZTRRdmUzeXhwUkxmV0Q4VERoWUxkZFhieVJpVndDdGFleDJ1VDdacSJ9.oD2Fv8Q_3_FWnJggAgVVmK9oSgZhIqg7udODz9xmsCg"},
 }
 
 var claims = map[string]*Claims{
@@ -111,12 +113,13 @@ var credentials = Credentials{
 }
 
 func TestMain(m *testing.M) {
-	configuration.CookieName = globCookieName
+	k := koanf.New(".")
+	f := flag.NewFlagSet("config", flag.ContinueOnError)
+
+	configuration = &config{}
+	configuration.ConfigurationFile = []string{"test.config.yml"}
+	configuration.Load(k, f)
 	configuration.Users = map[string]string{globUsername: globBcrypt0000, globUsername + "H": globBcrypt1111}
 	configuration.Valid(true)
-
-	// need to do this after set valid because key is too weak
-	configuration.JwtKey = []byte("12345")
-
 	os.Exit(m.Run())
 }

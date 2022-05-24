@@ -8,7 +8,7 @@ Tls: false
 #Certificate: /opt/gfa/ssl/server.crt
 
 # Cookie and session configuration
-#CookieDomain: "mydomain.com" # leave empty to disable sso
+CookieDomain: "" # leave empty to disable sso
 CookieName: "COOK"
 TokenExpire: 90 # jwt expiration delay in minutes
 TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (0 to disable refresh)
