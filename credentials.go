@@ -25,20 +25,20 @@ type Credentials struct {
 func (c Credentials) IsValid() (err error) {
 
 	// If user list is empty
-	if configuration.UsersDeprecied == nil || len(configuration.UsersDeprecied) == 0 {
+	if configuration.Users == nil || len(configuration.Users) == 0 {
 		return errors.New("credentials: no user available")
 	}
 
 	// Get the expected password from user name (hashed)
-	expectedPassword, ok := configuration.UsersDeprecied[c.Username]
+	expectedUser, ok := configuration.Users[c.Username]
 
 	// if password is not supplied
-	if !ok || expectedPassword == "" {
+	if !ok || expectedUser.Password == "" {
 		return errors.New("credentials: bad password supplied for user")
 	}
 
 	// Compare hashes
-	return IsValidHash(c.Password, expectedPassword)
+	return IsValidHash(c.Password, expectedUser.Password)
 }
 
 // Extract Credentials from request HEADER or BODY

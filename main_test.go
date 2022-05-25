@@ -119,7 +119,7 @@ func TestMain(m *testing.M) {
 	configuration = &config{}
 	configuration.ConfigurationFile = []string{"test.config.yml"}
 	configuration.Load(k, f)
-	configuration.UsersDeprecied = map[string]string{globUsername: globBcrypt0000, globUsername + "H": globBcrypt1111}
+	configuration.Users = map[string]user{globUsername: {Password: globBcrypt0000}, globUsername + "H": {Password: globBcrypt1111}}
 	configuration.Valid(true)
 	os.Exit(m.Run())
 }

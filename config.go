@@ -16,20 +16,19 @@ import (
 )
 
 type config struct {
-	Tls               bool              `koanf:"Tls"`
-	PrivateKey        string            `koanf:"PrivateKey"`
-	Certificate       string            `koanf:"Certificate"`
-	Port              uint              `koanf:"Port"`
-	CookieDomain      string            `koanf:"CookieDomain"`
-	CookieName        string            `koanf:"CookieName"`
-	TokenExpire       time.Duration     `koanf:"TokenExpire"`
-	TokenRefresh      time.Duration     `koanf:"TokenRefresh"`
-	HtmlFile          string            `koanf:"HtmlFile"`
-	JwtSecretKey      []byte            `koanf:"JwtSecretKey"`
-	HashCost          int               `koanf:"HashCost"`
-	UsersDeprecied    map[string]string `koanf:"UsersDeprecied"`
-	Debug             bool              `koanf:"Debug"`
-	Users             map[string]user   `koanf:"Users"`
+	Tls               bool            `koanf:"Tls"`
+	PrivateKey        string          `koanf:"PrivateKey"`
+	Certificate       string          `koanf:"Certificate"`
+	Port              uint            `koanf:"Port"`
+	CookieDomain      string          `koanf:"CookieDomain"`
+	CookieName        string          `koanf:"CookieName"`
+	TokenExpire       time.Duration   `koanf:"TokenExpire"`
+	TokenRefresh      time.Duration   `koanf:"TokenRefresh"`
+	HtmlFile          string          `koanf:"HtmlFile"`
+	JwtSecretKey      []byte          `koanf:"JwtSecretKey"`
+	HashCost          int             `koanf:"HashCost"`
+	Debug             bool            `koanf:"Debug"`
+	Users             map[string]user `koanf:"Users"`
 	ConfigurationFile []string
 }
 
@@ -37,7 +36,7 @@ type user struct {
 	Name           string   `koanf:"Name"`
 	Password       string   `koanf:"Password"`
 	IsAdmin        bool     `koanf:"IsAdmin"`
-	AllowedDomains []string `koanf:"Userfile"`
+	AllowedDomains []string `koanf:"AllowedDomains"`
 }
 
 const defaultConfigurationFile = "default.config.yml"

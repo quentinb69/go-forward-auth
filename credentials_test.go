@@ -10,35 +10,35 @@ import (
 
 func TestIsValid(t *testing.T) {
 	assert := assert.New(t)
-	backup := configuration.UsersDeprecied
-	defer func() { configuration.UsersDeprecied = backup }()
+	backup := configuration.Users
+	defer func() { configuration.Users = backup }()
 
 	cred := credentials
 
 	// No user
-	configuration.UsersDeprecied = nil
+	configuration.Users = nil
 	err := cred.IsValid()
 	assert.EqualError(err, "credentials: no user available")
 
-	configuration.UsersDeprecied = map[string]string{}
+	configuration.Users = map[string]user{}
 	err = cred.IsValid()
 	assert.EqualError(err, "credentials: no user available")
 
 	// bad user-password
-	configuration.UsersDeprecied = map[string]string{"TEST2": "TOTO"}
+	configuration.Users = map[string]user{"TEST2": {Password: "TOTO"}}
 	err = cred.IsValid()
 	assert.EqualError(err, "credentials: bad password supplied for user")
 
-	configuration.UsersDeprecied = map[string]string{"TEST2": "TOTO", cred.Username: ""}
+	configuration.Users = map[string]user{"TEST2": {Password: "TOTO"}, cred.Username: {Password: ""}}
 	err = cred.IsValid()
 	assert.EqualError(err, "credentials: bad password supplied for user")
 
-	configuration.UsersDeprecied = map[string]string{"TEST2": "TOTO", cred.Username: globBcrypt1111}
+	configuration.Users = map[string]user{"TEST2": {Password: "TOTO"}, cred.Username: {Password: globBcrypt1111}}
 	err = cred.IsValid()
 	assert.EqualError(err, "crypto/bcrypt: hashedPassword is not the hash of the given password")
 
 	// valid
-	configuration.UsersDeprecied = map[string]string{"TEST2": "TOTO", cred.Username: globBcrypt0000}
+	configuration.Users = map[string]user{"TEST2": {Password: "TOTO"}, cred.Username: {Password: globBcrypt0000}}
 	err = cred.IsValid()
 	assert.NoError(err)
 
