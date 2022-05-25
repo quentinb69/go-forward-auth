@@ -25,7 +25,7 @@ TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (
 # enable some debug output
 #Debug: false
 
-# list of users :
+# list of users (deprecied) :
 #   - key is the user name
 #   - value is the bcrypt hash of the password (https://bcrypt.online/)
 #Users:

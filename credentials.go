@@ -25,12 +25,12 @@ type Credentials struct {
 func (c Credentials) IsValid() (err error) {
 
 	// If user list is empty
-	if configuration.Users == nil || len(configuration.Users) == 0 {
+	if configuration.UsersDeprecied == nil || len(configuration.UsersDeprecied) == 0 {
 		return errors.New("credentials: no user available")
 	}
 
 	// Get the expected password from user name (hashed)
-	expectedPassword, ok := configuration.Users[c.Username]
+	expectedPassword, ok := configuration.UsersDeprecied[c.Username]
 
 	// if password is not supplied
 	if !ok || expectedPassword == "" {

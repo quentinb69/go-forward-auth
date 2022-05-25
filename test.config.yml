@@ -25,5 +25,15 @@ JwtSecretKey: "1111111111.1111111111.1111111111.1111111111.1111111111"
 # enable some debug output
 Debug: true
 
-# file containing users and groups
-Userfile: ./test.users.yml
+# users
+Users:
+  - admin:
+    Name: ADMINISTRATEUR
+    Password: $2a$05$5Q7AIdXjMaiCnd2VZYNlke7PskIgXNaaOKrUVIa787VUU5L5usooG
+    IsAdmin: true
+    AllowedDomains:
+  - toto:
+    Name: TOTO
+    Password: $2a$05$JQKwvqAyG1SzDEr.jkp3Ke1YEDwt1XVkrvjG/0bj5eb8o9CHX0VWi
+    IsAdmin: false
+    AllowedDomains: test.com
