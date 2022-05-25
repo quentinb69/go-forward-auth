@@ -15,7 +15,7 @@ import (
 	"github.com/knadh/koanf/providers/file"
 )
 
-type config struct {
+type Config struct {
 	Tls               bool            `koanf:"Tls"`
 	PrivateKey        string          `koanf:"PrivateKey"`
 	Certificate       string          `koanf:"Certificate"`
@@ -28,24 +28,17 @@ type config struct {
 	JwtSecretKey      []byte          `koanf:"JwtSecretKey"`
 	HashCost          int             `koanf:"HashCost"`
 	Debug             bool            `koanf:"Debug"`
-	Users             map[string]user `koanf:"Users"`
+	Users             map[string]User `koanf:"Users"`
 	ConfigurationFile []string
-}
-
-type user struct {
-	Name           string   `koanf:"Name"`
-	Password       string   `koanf:"Password"`
-	IsAdmin        bool     `koanf:"IsAdmin"`
-	AllowedDomains []string `koanf:"AllowedDomains"`
 }
 
 const defaultConfigurationFile = "default.config.yml"
 const defaultHtmlFile = "default.index.html"
 
-var configuration *config
+var configuration *Config
 
 // validate data, and set default values if init is true
-func (c *config) Valid(init bool) error {
+func (c *Config) Valid(init bool) error {
 	if c == nil {
 		return errors.New("config: no configuration provided")
 	}
@@ -109,7 +102,7 @@ func (c *config) Valid(init bool) error {
 }
 
 // load configuration from command line
-func (c *config) LoadCommandeLine(f *flag.FlagSet) error {
+func (c *Config) LoadCommandeLine(f *flag.FlagSet) error {
 	if c == nil {
 		return errors.New("config: no configuration provided")
 	}
@@ -133,7 +126,7 @@ func (c *config) LoadCommandeLine(f *flag.FlagSet) error {
 }
 
 // load configuration from file
-func (c *config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
+func (c *Config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
 	if k == nil || c == nil {
 		return false, errors.New("config: no koanf nor configuration provided")
 	}
@@ -155,7 +148,7 @@ func (c *config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
 
 // read configuration from file.
 // If file is flag is supplied by flag load it, if not load defined arbitrary path
-func (c *config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
+func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 	if c == nil {
 		return errors.New("config: no configuration provided")
 	}

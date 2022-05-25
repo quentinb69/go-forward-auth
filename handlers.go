@@ -8,35 +8,40 @@ import (
 	"time"
 )
 
+type TemplateData struct {
+	Ip       string
+	Name     string
+	Csrf     string
+	State    string
+	HttpCode int
+}
+
 // Render HTML passed in configuration
-func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode int, state string) error {
+func RenderTemplate(w *http.ResponseWriter, ctx *TemplateData, cookie *http.Cookie) error {
 
 	if w == nil {
 		return errors.New("handler: responsewriter is mandatory")
 	}
 
 	data := make(map[string]string)
-	data["ip"] = ip
-	data["csrf"] = "TODO"
-	data["state"] = state
+	data["ip"] = ctx.Ip
+	data["csrf"] = ctx.Csrf
+	data["state"] = ctx.State
+	data["username"] = ctx.Name
 
-	// Login ok
-	if claims != nil {
-		data["username"] = claims.Username
-		// return logged-in user in header
-		(*w).Header().Add("Remote-User", claims.Username)
+	// set headers
+	if cookie != nil {
+		http.SetCookie(*w, cookie)
 	}
+	if ctx.Name != "" {
+		(*w).Header().Add("Remote-User", ctx.Name)
+	}
+	(*w).WriteHeader(ctx.HttpCode)
 
 	// load template
 	parsedTemplate, _ := template.ParseFiles(configuration.HtmlFile)
 	// return http code and html
-	(*w).WriteHeader(httpCode)
-	err := parsedTemplate.Execute(*w, data)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return parsedTemplate.Execute(*w, data)
 }
 
 // LOGOUT HANDLER
@@ -45,14 +50,12 @@ func RenderTemplate(w *http.ResponseWriter, claims *Claims, ip string, httpCode 
 func Logout(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
-	_, err := GetClaims(r, ip)
 
-	// no or invalid jwt supplied
-	if err != nil {
-		log.Printf("handler: invalid jwt for %s\n\t-> %v", ip, err)
+	// get valid claims
+	if _, err := GetValidClaimsFromRequest(r, ip); err != nil {
+		log.Printf("handler: invalid jwt claims for %s\n\t-> %v", ip, err)
 		time.Sleep(500 * time.Millisecond)
 		http.Redirect(w, r, "/", http.StatusUnauthorized)
-		return
 	}
 
 	// remove cookie
@@ -76,39 +79,52 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 func Home(w http.ResponseWriter, r *http.Request) {
 
 	ip := GetIp(r)
-	state := "out" // logged-in or logged-out
+	ctx := &TemplateData{Ip: ip, State: "out", Csrf: "TODO", HttpCode: 401}
 
-	claims, err := GetClaims(r, ip)
+	c, err := GetValidClaimsFromRequest(r, ip)
 
 	// no or invalid jwt supplied
 	if err != nil {
 
 		log.Printf("handler: invalid jwt for %s\n\t-> %v", ip, err)
-		credentials, err := GetCredentials(r)
 
-		// no or invalid credentials supplied
+		// invalid data supplied
+		f, err := GetValidFormDataFromRequest(r, ip)
 		if err != nil {
-			log.Printf("handler: invalid credentials for %s\n\t-> %v", ip, err)
+			log.Printf("handler: invalid dataform for %s\n\t-> %v", ip, err)
 			// fake waiting time to limit brute force
 			time.Sleep(500 * time.Millisecond)
-			err = RenderTemplate(&w, claims, ip, http.StatusUnauthorized, state)
+			err = RenderTemplate(&w, ctx, nil)
 			if err != nil {
 				log.Fatalf("handler: error rendering template\n\t-> %v", err)
 			}
 			return
 		}
 
-		// valid credentials supplied
-		state = "in"
-		log.Printf("handler: creating jwt for %s", ip)
-		claims, err = CreateClaims(credentials, ip)
+		// invalid user
+		u, err := GetValidUserFromFormData(f)
 		if err != nil {
-			log.Fatalf("handler: error generating claims\n\t-> %v", err)
+			log.Printf("handler: invalid user for %s\n\t-> %v", ip, err)
+			// fake waiting time to limit brute force
+			time.Sleep(500 * time.Millisecond)
+			err = RenderTemplate(&w, ctx, nil)
+			if err != nil {
+				log.Fatalf("handler: error rendering template\n\t-> %v", err)
+			}
+			return
 		}
-		if err = CreateJwt(&w, claims); err != nil {
+
+		// valid data supplied
+		log.Printf("handler: creating jwt for %s", ip)
+		cookie, err := c.ToJwtCookie()
+		if err != nil {
 			log.Fatalf("handler: error creatintg jwt\n\t-> %v", err)
 		}
-		RenderTemplate(&w, claims, ip, http.StatusMultipleChoices, state)
+
+		ctx.HttpCode = http.StatusMultipleChoices
+		ctx.State = "in"
+		ctx.Name = u.Name
+		RenderTemplate(&w, ctx, cookie)
 		if err != nil {
 			log.Fatalf("handler: error rendering template\n\t-> %v", err)
 		}
@@ -116,23 +132,25 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// valid jwt supplied
-	state = "in"
-	needRefresh := time.Until(claims.ExpiresAt.Time) < (configuration.TokenRefresh * time.Minute)
-
+	ctx.State = "in"
+	needRefresh := time.Until(c.ExpiresAt.Time) < (configuration.TokenRefresh * time.Minute)
 	// jwt can be extended
 	if needRefresh {
 		log.Printf("handler: new jwt for %s", ip)
-		if err = CreateJwt(&w, claims); err != nil {
-			log.Fatalf("handler: creating jwt\n\t-> %v", err)
+		cookie, err := c.ToJwtCookie()
+		if err != nil {
+			log.Fatalf("handler: error creatintg jwt\n\t-> %v", err)
 		}
-		RenderTemplate(&w, claims, ip, http.StatusMultipleChoices, state)
+		ctx.HttpCode = http.StatusMultipleChoices
+		RenderTemplate(&w, ctx, cookie)
 		if err != nil {
 			log.Fatalf("handler: error rendering template\n\t-> %v", err)
 		}
 		return
 	}
 
-	RenderTemplate(&w, claims, ip, http.StatusOK, state)
+	ctx.HttpCode = http.StatusOK
+	RenderTemplate(&w, ctx, nil)
 	if err != nil {
 		log.Fatalf("handler: error rendering template\n\t-> %v", err)
 	}

@@ -14,7 +14,7 @@ func main() {
 	k := koanf.New(".")
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
 
-	configuration := &config{}
+	configuration := &Config{}
 
 	if err := configuration.Load(k, f); err != nil {
 		log.Fatal("main: error loading configuration\n\t-> " + err.Error())

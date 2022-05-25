@@ -134,7 +134,7 @@ func TestValid(t *testing.T) {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			c := &config{}
+			c := &Config{}
 
 			// initialize with valid config
 			if tc.InitializeConfig {
@@ -189,7 +189,7 @@ func TestValid(t *testing.T) {
 }
 
 func TestLoadCommandeLine(t *testing.T) {
-	c := &config{}
+	c := &Config{}
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
 
 	// no flag
@@ -289,7 +289,7 @@ func TestLoadFile(t *testing.T) {
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			//t.Parallel()
-			c := &config{}
+			c := &Config{}
 			c.ConfigurationFile = tc.Files
 			d, err := c.LoadFile(tc.Koanf)
 			assert.Equal(t, tc.ExpectedDefault, d)
@@ -307,7 +307,7 @@ func TestLoad(t *testing.T) {
 
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
 
-	c := &config{}
+	c := &Config{}
 	k := koanf.New(".")
 	c.LoadCommandeLine(f) // init
 	assert.False(t, c.Debug)

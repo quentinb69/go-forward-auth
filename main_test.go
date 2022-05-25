@@ -33,7 +33,7 @@ const globDataH = "username=" + globUsername + "H&password=" + globPasswordH + "
 
 const globCookieName = "COOK"
 
-var headersCredentials = map[string]*http.Header{
+var headersFormData = map[string]*http.Header{
 	"fake":       {"fake": []string{"FAKE"}},
 	"nousername": {"Auth-Form": []string{globDataNoUsername}},
 	"nopassword": {"Auth-Form": []string{globDataNoPassword}},
@@ -71,8 +71,8 @@ var cookiesClaims = map[string]*http.Cookie{
 
 var claims = map[string]*Claims{
 	"valid": {
-		Username: globUsername,
-		Ip:       globValidIp,
+		Name: globUsername,
+		Ip:   globValidIp,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        "999",
 			ExpiresAt: jwt.NewNumericDate(time.Unix(999999999999999999, 0)),
@@ -82,8 +82,8 @@ var claims = map[string]*Claims{
 			NotBefore: jwt.NewNumericDate(time.Unix(1, 0)),
 		}},
 	"expired": {
-		Username: globUsername,
-		Ip:       globValidIp,
+		Name: globUsername,
+		Ip:   globValidIp,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        "999",
 			ExpiresAt: jwt.NewNumericDate(time.Unix(1, 0)),
@@ -93,8 +93,8 @@ var claims = map[string]*Claims{
 			NotBefore: jwt.NewNumericDate(time.Unix(1, 0)),
 		}},
 	"nousername": {
-		Username: "",
-		Ip:       globValidIp,
+		Name: "",
+		Ip:   globValidIp,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        "999",
 			ExpiresAt: jwt.NewNumericDate(time.Unix(1, 0)),
@@ -105,21 +105,23 @@ var claims = map[string]*Claims{
 		}},
 }
 
-var credentials = Credentials{
+var formData = FormData{
 	Username: globUsername,
 	Password: globPassword,
 	Action:   globAction,
 	Csrf:     globCsrf,
 }
 
+var user = User{}
+
 func TestMain(m *testing.M) {
 	k := koanf.New(".")
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
 
-	configuration = &config{}
+	configuration = &Config{}
 	configuration.ConfigurationFile = []string{"test.config.yml"}
 	configuration.Load(k, f)
-	configuration.Users = map[string]user{globUsername: {Password: globBcrypt0000}, globUsername + "H": {Password: globBcrypt1111}}
+	configuration.Users = map[string]User{globUsername: {Password: globBcrypt0000}, globUsername + "H": {Password: globBcrypt1111}}
 	configuration.Valid(true)
 	os.Exit(m.Run())
 }

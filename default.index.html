@@ -19,7 +19,7 @@ body {
   align-items: center;
   padding-top: 40px;
   padding-bottom: 40px;
-  background-color: #212529;
+  background-color: #000;
   color: #fff;
 }
 
@@ -39,7 +39,7 @@ body {
 
 .form-input {
     color: #fff;
-    background-color: rgba(0,0,0,0.2);
+    background-color: #222;
     padding: 0.5rem;
     border: 0;
     display: block;
@@ -115,7 +115,7 @@ body {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", window.location, true);
     xhr.setRequestHeader("Auth-Form", new URLSearchParams(formData).toString());
-    xhr.withCredentials = true;
+    xhr.withFormData = true;
     xhr.onload = (e) => {
       if (xhr.status != 200 && (xhr.status < 300 || xhr.status >=400)) {
     	  // Print error message
