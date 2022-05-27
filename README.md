@@ -12,15 +12,16 @@ Use at your own risk, not yet secured. Feel free to PR/Issue if you detect secur
 
 ## Endpoints
 - / for html rendering and forward-auth url 
-  - return 401 and a "Login page" if no valid JWT and invalid FormData supplied
-  - return 300 if no valid JWT and valid FormData supplied (means you logged-in succesfully)
+  - return 401 and a "Login page" if no valid JWT and invalid credentials supplied
+  - return 300 if no valid JWT and valid credentials supplied (means you logged-in succesfully)
   - return 300 and extend JWT if valid JWT near expiration date
   - return 200 and a "Welcome page" if valid JWT
 - /logout to logout
   - return 401 if invalid JWT
   - return 302 if valid JWT (means you logged-out succesfully)
 
-To log-in, FormData are supplied via Header "Auth-Form" (POST is not forwarded to middlewares by Traefik)
+To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarded to middlewares by Traefik)
+GFA check if the website is allowed for the user (cf. configuration file and Aud in JWT)
 
 ## WIP
 - ~~jwt instead of cookie and session~~
@@ -31,7 +32,7 @@ To log-in, FormData are supplied via Header "Auth-Form" (POST is not forwarded t
 - ~~pass header value such as username when valid JWT~~
 - ~~automatic test~~
 - ~~automatic lint (gofmt, etc...)~~
-- use actions and CSRF ? (not sure if needed)
+- ~~use CSRF ? (not sure if needed)~~
 - help tool for bcrypt
 - real documentation
 - reacto for cleaner code

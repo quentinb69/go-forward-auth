@@ -9,7 +9,7 @@ Tls: false
 
 # Cookie and session configuration
 CookieDomain: "" # leave empty to disable sso
-CookieName: "COOK"
+CookieName: "_test_gfa"
 TokenExpire: 90 # jwt expiration delay in minutes
 TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (0 to disable refresh)
 
@@ -17,8 +17,8 @@ TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (
 HtmlFile: default.index.html
 
 # key to sign jwt. If not provided, will be generated
-JwtSecretKey: "1111111111.1111111111.1111111111.1111111111.1111111111"
-
+JwtSecretKey: "1111111111111111111111111111111111111111111111111111111111111111"
+CsrfSecretKey: "22222222222222222222222222222222"
 # number fo bcrypt iterations (default 10) (not used yet)
 #HashCost: 10
 
@@ -29,11 +29,13 @@ Debug: true
 Users:
   - admin:
       Name: ADMINISTRATEUR
-      Password: $2a$05$5Q7AIdXjMaiCnd2VZYNlke7PskIgXNaaOKrUVIa787VUU5L5usooG
+      Password: $2y$10$t6XPeRTf5.a.Gb3I/lYq7ukuOpx6fsJRstEXNfOP4jXjjGGZ2Af72 # pass
       IsAdmin: true
-      AllowedDomains:
-  - toto:
-      Name: TOTO
-      Password: $2a$05$JQKwvqAyG1SzDEr.jkp3Ke1YEDwt1XVkrvjG/0bj5eb8o9CHX0VWi
+      AllowedDomains: ".*"
+  - jean:
+      Name: JEAN
+      Password: $2y$10$PpzVO0zStuQKJAHmdIBqQuagxkc732nnGR.Iet4SE5tJR1FjOuo.6 # pwd
       IsAdmin: false
-      AllowedDomains: test.com
+      AllowedDomains:
+        - "allowed.com"
+        - ".*website"

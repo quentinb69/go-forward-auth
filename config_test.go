@@ -23,6 +23,7 @@ func TestValid(t *testing.T) {
 		SetHtmlFile           string
 		SetBadPort            uint
 		SetJwtSecretKey       []byte
+		SetCsrfSecretKey      []byte
 		SetCookieName         string
 		SetTokenRefresh       time.Duration
 		SetTokenExpire        time.Duration
@@ -93,6 +94,13 @@ func TestValid(t *testing.T) {
 			SetJwtSecretKey:       []byte("123"),
 		},
 		{
+			Name:                  "INVALIDCsrfSecretKey_NOINIT",
+			ExpectedError:         true,
+			ExpectedErrorContains: "CsrfSecretKey must be 32 bytes long",
+			InitializeConfig:      true,
+			SetCsrfSecretKey:      []byte("123"),
+		},
+		{
 			Name:                  "INVALIDCOOKIENAME_NOINIT",
 			ExpectedError:         true,
 			ExpectedErrorContains: "missing CookieName",
@@ -130,7 +138,7 @@ func TestValid(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		// shadow
+		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
@@ -157,8 +165,8 @@ func TestValid(t *testing.T) {
 				c.HtmlFile = tc.SetHtmlFile
 			case len(tc.SetJwtSecretKey) != 0:
 				c.JwtSecretKey = tc.SetJwtSecretKey
-			case len(tc.SetJwtSecretKey) != 0:
-				c.JwtSecretKey = tc.SetJwtSecretKey
+			case len(tc.SetCsrfSecretKey) != 0:
+				c.CsrfSecretKey = tc.SetCsrfSecretKey
 			case tc.SetTokenExpire != 0:
 				c.TokenExpire = tc.SetTokenExpire
 			case tc.SetTokenRefresh != 0:
@@ -305,16 +313,31 @@ func TestLoadFile(t *testing.T) {
 
 func TestLoad(t *testing.T) {
 
-	f := flag.NewFlagSet("config", flag.ContinueOnError)
+	testCase := []struct {
+		name                  string
+		flagName              string
+		flagValue             string
+		expectedErrorContains string
+	}{
+		{"bad_conf", "conf", "bad_conf", "error loading file"},
+	}
 
-	c := &Config{}
-	k := koanf.New(".")
-	c.LoadCommandeLine(f) // init
-	assert.False(t, c.Debug)
-	assert.Empty(t, c.ConfigurationFile)
+	for _, tc := range testCase {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			f := flag.NewFlagSet(tc.name, flag.ContinueOnError)
 
-	// bad file
-	f.Set("conf", "./BAD_FILE")
-	err := c.Load(k, f)
-	assert.ErrorContains(t, err, "error loading file")
+			c := &Config{}
+			k := koanf.New(".")
+			c.LoadCommandeLine(f) // init
+			assert.False(t, c.Debug)
+			assert.Empty(t, c.ConfigurationFile)
+
+			f.Set(tc.flagName, tc.flagValue)
+			err := c.Load(k, f)
+			assert.ErrorContains(t, err, tc.expectedErrorContains)
+		})
+
+	}
 }

@@ -29,7 +29,7 @@ body {
     padding: 4rem 2rem;
     margin: auto;
     height: fit-content;
-    background: rgba(0,0,0,0.13);
+    background: #222;
     border-radius: 1rem;
 }
 
@@ -39,7 +39,7 @@ body {
 
 .form-input {
     color: #fff;
-    background-color: #222;
+    background-color: #000;
     padding: 0.5rem;
     border: 0;
     display: block;
@@ -115,7 +115,8 @@ body {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", window.location, true);
     xhr.setRequestHeader("Auth-Form", new URLSearchParams(formData).toString());
-    xhr.withFormData = true;
+    xhr.setRequestHeader("X-CSRF-Token", formData.get("csrf"));
+    //xhr.withFormData = true;
     xhr.onload = (e) => {
       if (xhr.status != 200 && (xhr.status < 300 || xhr.status >=400)) {
     	  // Print error message

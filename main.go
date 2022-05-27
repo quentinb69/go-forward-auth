@@ -1,35 +1,28 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/knadh/koanf"
 	flag "github.com/spf13/pflag"
 )
 
-func main() {
+var configuration *Config
 
+// initilise configuration
+func LoadConfiguration() error {
 	k := koanf.New(".")
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
 
-	configuration := &Config{}
+	configuration = &Config{}
 
-	if err := configuration.Load(k, f); err != nil {
+	return configuration.Load(k, f)
+}
+
+func main() {
+	// Load server
+	if err := LoadConfiguration(); err != nil {
 		log.Fatal("main: error loading configuration\n\t-> " + err.Error())
 	}
-
-	http.HandleFunc("/", Home)
-	http.HandleFunc("/logout", Logout)
-
-	log.Printf("Loading server on port %d... (TLS connection is set to %t)", configuration.Port, configuration.Tls)
-
-	// transform PORT from int to string like ":<port>"
-	var port = ":" + fmt.Sprint(configuration.Port)
-	if !configuration.Tls {
-		log.Fatal(http.ListenAndServe(port, nil))
-	} else {
-		log.Fatal(http.ListenAndServeTLS(port, configuration.Certificate, configuration.PrivateKey, nil))
-	}
+	log.Fatal(LoadServer())
 }
