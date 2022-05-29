@@ -79,7 +79,7 @@ func TestToMap(t *testing.T) {
 func TestLoadTemplate(t *testing.T) {
 	ctx := &Context{
 		FormData:       &FormData{Username: "Pierre"},
-		User:           &User{Username: "Jean"},
+		User:           &User{Username: "Jean", Name: "JEAN"},
 		State:          "",
 		CsrfToken:      "TestCsrf",
 		Ip:             "TestIp",
@@ -129,7 +129,8 @@ func TestLoadTemplate(t *testing.T) {
 				assert.Contains(t, string(body), tc.expectedBodyContains)
 				assert.Contains(t, string(body), tc.ctx.Ip)
 				if tc.ctx.GeneratedCookie != nil && tc.ctx.User.Name != "" && tc.ctx.State == "in" {
-					assert.Contains(t, string(body), tc.ctx.User.Username)
+					assert.Contains(t, string(body), tc.ctx.User.Name)
+					assert.Equal(t, tc.ctx.User.Name, resp.Header.Get("Remote-User"))
 				}
 			} else {
 				assert.ErrorContains(t, err, "mandatory")

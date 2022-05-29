@@ -178,8 +178,8 @@ func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 
 	// print configuration values
 	if c.Debug {
-		log.Printf("Configuration read:\n\t%v", k)
-		log.Printf("Configuration parsed:\n\t%v", c)
+		log.Printf("Configuration read:\n\t-> %v", k)
+		log.Printf("Configuration parsed:\n\t-> %v", c)
 	}
 
 	return nil
