@@ -69,6 +69,10 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("server: home request for %s\n\t-> %v", ctx.Ip, r)
 	}
 
+	if configuration.Debug {
+		log.Printf("server: home request for %s\n\t-> %v", ctx.Ip, r)
+	}
+
 	// get jwt from cookie
 	ctx.UserCookie, _ = r.Cookie(configuration.CookieName)
 	cl := GetValidJwtClaims(ctx.UserCookie, ctx.Ip, ctx.Url)
