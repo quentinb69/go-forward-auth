@@ -1,84 +1,186 @@
 package main
 
 import (
-	"flag"
+	"crypto/tls"
+	"errors"
+	"fmt"
 	"log"
+	"os"
 	"time"
+
+	flag "github.com/spf13/pflag" // POSIX compliant
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 )
 
-type config struct {
-	Tls          bool              `koanf:"Tls"`
-	PrivateKey   string            `koanf:"PrivateKey"`
-	Cert         string            `koanf:"Cert"`
-	Port         uint              `koanf:"Port"`
-	CookieDomain string            `koanf:"CookieDomain"`
-	CookieName   string            `koanf:"CookieName"`
-	TokenExpire  time.Duration     `koanf:"TokenExpire"`
-	TokenRefresh time.Duration     `koanf:"TokenRefresh"`
-	HtmlFile     string            `koanf:"HtmlFile"`
-	JwtKey       []byte            `koanf:"JwtKey"`
-	HashCost     int               `koanf:"HashCost"`
-	Users        map[string]string `koanf:"Users"`
+type Config struct {
+	Tls               bool             `koanf:"Tls"`
+	PrivateKey        string           `koanf:"PrivateKey"`
+	Certificate       string           `koanf:"Certificate"`
+	Port              uint             `koanf:"Port"`
+	CookieDomain      string           `koanf:"CookieDomain"`
+	CookieName        string           `koanf:"CookieName"`
+	TokenExpire       time.Duration    `koanf:"TokenExpire"`
+	TokenRefresh      time.Duration    `koanf:"TokenRefresh"`
+	HtmlFile          string           `koanf:"HtmlFile"`
+	JwtSecretKey      []byte           `koanf:"JwtSecretKey"`
+	CsrfSecretKey     []byte           `koanf:"CsrfSecretKey"`
+	HashCost          int              `koanf:"HashCost"`
+	Debug             bool             `koanf:"Debug"`
+	Users             map[string]*User `koanf:"Users"`
+	ConfigurationFile []string
 }
 
 const defaultConfigurationFile = "default.config.yml"
-const arbitraryDefinedConfigFile = "/opt/data/config.yml"
+const defaultHtmlFile = "default.index.html"
 
-var configuration config
+// validate data, and set default values if init is true
+func (c *Config) Valid(init bool) error {
 
-func loadConfiguration() {
-
-	// read configuration file from command line
-	var k = koanf.New(".")
-	var configFile string
-	var debug bool
-	flag.StringVar(&configFile, "conf", "", "Link configuration file.")
-	flag.BoolVar(&debug, "d", false, "Show configuration information in log.")
-	flag.Parse()
-
-	// default configuration
-	if err := k.Load(file.Provider(defaultConfigurationFile), yaml.Parser()); err != nil {
-		log.Fatalf("Error loading default configuration\n\t-> %v", err)
-	}
-
-	// read configuration from file.
-	// If file is flag is supplied by flag load it, if not load defined arbitrary path
-	if configFile != "" {
-		if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
-			// error in supplied file, so bloking error
-			log.Fatalf("Error loading configuration file\n\t-> %v", err)
-		}
-	} else {
-		if err := k.Load(file.Provider(arbitraryDefinedConfigFile), yaml.Parser()); err != nil {
-			// error in arbitrary path file, so non-bloking error
-			log.Printf("Can't load configuration file\n\t-> %v", err)
-		}
-	}
-
-	// load configuration in global configuration var
-	if err := k.Unmarshal("", &configuration); err != nil {
-		log.Fatalf("Error parsing configuration\n\t-> %v", err)
-	}
-
-	// if weak secret provided, generate one
-	if len(configuration.JwtKey) < 32 {
-		log.Printf("JwtKey provided is too weak (%d), generating one...", len(configuration.JwtKey))
-		array, err := GenerateRand(64)
+	if c.Tls {
+		_, err := tls.LoadX509KeyPair(c.Certificate, c.PrivateKey)
 		if err != nil {
-			log.Fatalf("Error generating JwtKey\n\t-> %v", err)
+			return errors.New("config: bad key pair\r\t-> " + err.Error())
 		}
-		configuration.JwtKey = *array
+	}
+	if c.Port < 1 || c.Port > 65534 {
+		if !init {
+			return errors.New("config: bad Port")
+		}
+		c.Port = 8080
+		log.Printf("config: setting Port to %v", c.Port)
+	}
+	if c.CookieName == "" {
+		if !init {
+			return errors.New("config: missing CookieName")
+		}
+		c.CookieName = "GFA"
+		log.Printf("config: setting CookieName to %v", c.CookieName)
+	}
+	if c.TokenExpire < 1 {
+		if !init {
+			return errors.New("config: TokenExpire is too small")
+		}
+		c.TokenExpire = 90
+		log.Printf("config: setting TokenExpire to %v", c.TokenExpire)
+	}
+	if c.TokenRefresh < 1 {
+		if !init {
+			return errors.New("config: TokenRefresh is too small")
+		}
+		c.TokenRefresh = 2
+		log.Printf("config: setting TokenRefresh to %v", c.TokenRefresh)
+	}
+	if c.HtmlFile == "" {
+		if !init {
+			return errors.New("config: missing HtmlFile")
+		}
+		c.HtmlFile = defaultHtmlFile
+		log.Printf("config: setting HtmlFile to %v", c.HtmlFile)
+	}
+	if _, err := os.Stat(c.HtmlFile); err != nil {
+		return errors.New("config: html template error\r\t-> " + err.Error())
+	}
+	if len(c.JwtSecretKey) < 32 {
+		if !init {
+			return errors.New("config: JwtSecretKey is too small")
+		}
+		log.Printf("config: JwtSecretKey provided is too weak (%d), generating secure one...", len(c.JwtSecretKey))
+		array := GenerateRandomBytes(64)
+		if len(*array) < 64 {
+			return errors.New("config : error generating JwtSecretKey")
+		}
+		c.JwtSecretKey = *array
+	}
+	if len(c.CsrfSecretKey) != 32 {
+		if !init {
+			return errors.New("config: CsrfSecretKey must be 32 bytes long")
+		}
+		log.Printf("config: CsrfSecretKey provided is too weak (%d), generating secure one...", len(c.CsrfSecretKey))
+		array := GenerateRandomBytes(32)
+		if len(*array) < 32 {
+			return errors.New("config : error generating CsrfSecretKey")
+		}
+		c.CsrfSecretKey = *array
 	}
 
-	log.Printf("Configuration loaded from file:\n\t%s,\n\t%s", defaultConfigurationFile, configFile)
+	return nil
+}
+
+// load configuration from command line
+func (c *Config) LoadCommandeLine(f *flag.FlagSet) {
+
+	f.Usage = func() {
+		fmt.Print(f.FlagUsages())
+		os.Exit(0)
+	}
+
+	if !f.HasFlags() {
+		f.StringSlice("conf", c.ConfigurationFile, "Link to one or more configurations files.")
+		f.Bool("d", c.Debug, "Enable some debbug log.")
+	}
+
+	f.Parse(os.Args[1:])
+
+	c.Debug, _ = f.GetBool("d")
+	c.ConfigurationFile, _ = f.GetStringSlice("conf")
+}
+
+// load configuration from file
+func (c *Config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
+	if k == nil {
+		return false, errors.New("config: no koanf provided")
+	}
+
+	// if no file provided, load form default location
+	isDefault = false
+	if len(c.ConfigurationFile) == 0 {
+		c.ConfigurationFile = []string{defaultConfigurationFile}
+		isDefault = true
+	}
+
+	for _, f := range c.ConfigurationFile {
+		if err := k.Load(file.Provider(f), yaml.Parser()); err != nil {
+			return isDefault, err
+		}
+	}
+	return isDefault, nil
+}
+
+// read configuration from file.
+// If file is flag is supplied by flag load it, if not load defined arbitrary path
+func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
+
+	c.LoadCommandeLine(f)
+
+	if d, err := c.LoadFile(k); err != nil {
+		if !d {
+			return errors.New("config: error loading file\n\t-> " + err.Error())
+		}
+		log.Printf("config: error loading default file\n\t-> " + err.Error())
+	}
+
+	// parse configuration in global configuration var
+	if err := k.Unmarshal("", c); err != nil {
+		return errors.New("config: error parsing configuration\n\t-> " + err.Error())
+	}
+
+	if err := c.Valid(false); err != nil {
+		log.Printf("config: configuration is not valid\n\t-> %v", err)
+		if err := c.Valid(true); err != nil {
+			return errors.New("config: default configuration is not valid either\n\t-> " + err.Error())
+		}
+	}
+
+	log.Printf("Configuration loaded from files: %v", c.ConfigurationFile)
 
 	// print configuration values
-	if debug {
+	if c.Debug {
 		log.Printf("Configuration read:\n\t%v", k)
-		log.Printf("Configuration parsed:\n\t%v", configuration)
+		log.Printf("Configuration parsed:\n\t%v", c)
 	}
+
+	return nil
 }

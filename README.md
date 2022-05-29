@@ -21,6 +21,7 @@ Use at your own risk, not yet secured. Feel free to PR/Issue if you detect secur
   - return 302 if valid JWT (means you logged-out succesfully)
 
 To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarded to middlewares by Traefik)
+GFA check if the website is allowed for the user (cf. configuration file and Aud in JWT)
 
 ## WIP
 - ~~jwt instead of cookie and session~~
@@ -31,7 +32,7 @@ To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarde
 - ~~pass header value such as username when valid JWT~~
 - ~~automatic test~~
 - ~~automatic lint (gofmt, etc...)~~
-- use actions and CSRF ? (not sure if needed)
+- ~~use CSRF ? (not sure if needed)~~
 - help tool for bcrypt
 - real documentation
 - reacto for cleaner code

@@ -62,7 +62,7 @@ func TestGetIp(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		// shadow
+		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
@@ -76,7 +76,7 @@ func TestGetIp(t *testing.T) {
 	}
 }
 
-func TestIsValidHash(t *testing.T) {
+func TestCompareHash(t *testing.T) {
 	testCases := []struct {
 		Name           string
 		ExpectedReturn bool
@@ -84,32 +84,43 @@ func TestIsValidHash(t *testing.T) {
 		Hash           string
 	}{
 		{
-			Name:           "valid",
+			Name:           "VALID_ADMIN",
 			ExpectedReturn: true,
-			Clear:          globPassword,
-			Hash:           globBcrypt0000,
+			Clear:          TestAdminPassword,
+			Hash:           configuration.Users["admin"].Password,
 		},
 		{
-			Name:           "validH",
+			Name:           "VALID_JEAN",
 			ExpectedReturn: true,
-			Clear:          globPasswordH,
-			Hash:           globBcrypt1111,
+			Clear:          TestJeanPassword,
+			Hash:           configuration.Users["jean"].Password,
 		},
 		{
-			Name:           "invalid",
+			Name:           "INVALID",
 			ExpectedReturn: false,
 			Clear:          "test",
-			Hash:           globBcrypt0000,
+			Hash:           configuration.Users["jean"].Password,
+		},
+		{
+			Name:           "BAD_BCRYPT",
+			ExpectedReturn: false,
+			Clear:          "test",
+			Hash:           "irehazulhrvuilevh",
+		},
+		{
+			Name:           "EMPTY",
+			ExpectedReturn: false,
+			Clear:          "test",
+			Hash:           "",
 		},
 	}
 
 	for _, tc := range testCases {
-		// shadow
+		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			err := IsValidHash(tc.Clear, tc.Hash)
-			assert.Equal(t, (err == nil), tc.ExpectedReturn)
+			assert.Equal(t, CompareHash(tc.Hash, tc.Clear), tc.ExpectedReturn)
 		})
 	}
 }
@@ -123,26 +134,74 @@ func TestGetHash(t *testing.T) {
 		{"Test 2", "tata"},
 	}
 	for _, tc := range testCases {
-		// shadow
+		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
-			got, _ := GetHash(tc.Data)
-			err := IsValidHash(tc.Data, got)
-			assert.NoError(t, err)
+			got := GetHash(tc.Data)
+			assert.True(t, CompareHash(got, tc.Data))
 		})
 	}
 }
 
-func TestGenerateRand(t *testing.T) {
+func TestGenerateRandomBytes(t *testing.T) {
 	testCases := []uint{5, 10, 99, 0}
 	for _, tc := range testCases {
-		// shadow
+		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(fmt.Sprint(tc), func(t *testing.T) {
 			t.Parallel()
-			ret, _ := GenerateRand(tc)
+			ret := GenerateRandomBytes(tc)
 			assert.Len(t, *ret, int(tc))
+		})
+	}
+}
+
+func TestGetDomain(t *testing.T) {
+	testCases := []struct {
+		Url    string
+		Domain string
+	}{
+		{"my.domain.google.com", "my.domain.google.com"},
+		{"domain", "domain"},
+		{"port.domain:443", "port.domain"},
+		{"", ""},
+		{":888", ""},
+		{"[::1]:123", "[::1]"},
+		{"127.0.0.1:888", "127.0.0.1"},
+	}
+	for _, tc := range testCases {
+		// shadow the test case to avoid modifying the test case
+		tc := tc
+		t.Run(fmt.Sprint(tc), func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.Domain, GetDomain(tc.Url))
+		})
+	}
+}
+
+func TestCompareDomains(t *testing.T) {
+	testCases := []struct {
+		Domains        []string
+		Url            string
+		ExpectedReturn bool
+	}{
+		{[]string{"multiple.com", "domain.fr"}, "domain", false},
+		{[]string{"single.com", "domain.fr"}, "domain.fr", true},
+		{[]string{"regex1.com", ".*domain.fr"}, "domain.fr", true},
+		{[]string{"regex2.com", ".*domain.fr"}, "my.domain.fr", true},
+		{[]string{"regex3.com", ".*domain.fr"}, "domain.fr.nope", false},
+		{[]string{"regex4.com", ".*domain.fr.*"}, "domain.fr.yep", true},
+		{[]string{"long.com", "valid.domain.fr"}, "domain.fr", false},
+		{[]string{"short.com", "domain.fr"}, "valid.domain.fr", true},
+		{[]string{".*"}, "any.domain.fr", true},
+	}
+	for _, tc := range testCases {
+		// shadow the test case to avoid modifying the test case
+		tc := tc
+		t.Run(fmt.Sprint(tc), func(t *testing.T) {
+			t.Parallel()
+			assert.Equal(t, tc.ExpectedReturn, CompareDomains(tc.Domains, tc.Url))
 		})
 	}
 }
