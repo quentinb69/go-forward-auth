@@ -107,7 +107,7 @@ func TestLoadTemplate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
 			if tc.cookie && tc.ctx != nil {
-				tc.ctx.Cookie = &http.Cookie{Name: "TestCookie", Value: "TestValue"}
+				tc.ctx.GeneratedCookie = &http.Cookie{Name: "TestCookie", Value: "TestValue"}
 
 			}
 			if tc.ctx != nil {
@@ -128,7 +128,7 @@ func TestLoadTemplate(t *testing.T) {
 				assert.Equal(t, tc.ctx.HttpReturnCode, resp.StatusCode)
 				assert.Contains(t, string(body), tc.expectedBodyContains)
 				assert.Contains(t, string(body), tc.ctx.Ip)
-				if tc.ctx.Cookie != nil && tc.ctx.User.Name != "" && tc.ctx.State == "in" {
+				if tc.ctx.GeneratedCookie != nil && tc.ctx.User.Name != "" && tc.ctx.State == "in" {
 					assert.Contains(t, string(body), tc.ctx.User.Username)
 				}
 			} else {

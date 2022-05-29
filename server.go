@@ -12,14 +12,15 @@ import (
 )
 
 type Context struct {
-	FormData       *FormData
-	User           *User
-	Cookie         *http.Cookie
-	HttpReturnCode int
-	CsrfToken      string
-	Ip             string
-	State          string
-	Url            string
+	FormData        *FormData
+	User            *User
+	UserCookie      *http.Cookie
+	GeneratedCookie *http.Cookie
+	HttpReturnCode  int
+	CsrfToken       string
+	Ip              string
+	State           string
+	Url             string
 }
 
 // set handler for and start listening
@@ -56,6 +57,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		nil,
 		nil,
 		nil,
+		nil,
 		http.StatusInternalServerError,
 		csrf.Token(r),
 		GetIp(r),
@@ -64,8 +66,8 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// get jwt from cookie
-	ctx.Cookie, _ = r.Cookie(configuration.CookieName)
-	cl := GetValidJwtClaims(ctx.Cookie, ctx.Ip, ctx.Url)
+	ctx.UserCookie, _ = r.Cookie(configuration.CookieName)
+	cl := GetValidJwtClaims(ctx.UserCookie, ctx.Ip, ctx.Url)
 
 	// no valid jwt (or expired, or bad domain)
 	if cl == nil {
@@ -82,7 +84,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 
 		// here user is valid
 		log.Printf("server: new jwt for %s", ctx.Ip)
-		ctx.Cookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
+		ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 		ctx.HttpReturnCode = http.StatusMultipleChoices
 		ctx.State = "in"
 		LoadTemplate(&w, ctx)
@@ -113,7 +115,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 	needRefresh := time.Until(cl.ExpiresAt.Time) < (configuration.TokenRefresh * time.Minute)
 	if needRefresh {
 		log.Printf("server: renew jwt for %s", ctx.Ip)
-		ctx.Cookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
+		ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 		ctx.HttpReturnCode = http.StatusMultipleChoices
 	}
 	LoadTemplate(&w, ctx)
@@ -154,8 +156,8 @@ func LoadTemplate(w *http.ResponseWriter, ctx *Context) error {
 		(*w).WriteHeader(http.StatusInternalServerError)
 		return errors.New("server: bad http return code")
 	}
-	if ctx.Cookie != nil {
-		http.SetCookie(*w, ctx.Cookie)
+	if ctx.GeneratedCookie != nil {
+		http.SetCookie(*w, ctx.GeneratedCookie)
 	}
 	if ctx.State == "in" {
 		(*w).Header().Add("Remote-User", ctx.User.Name)
