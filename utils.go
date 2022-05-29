@@ -38,6 +38,15 @@ func GetIp(r *http.Request) (ip string) {
 	return
 }
 
+// get host from request
+func GetHost(r *http.Request) (host string) {
+	host = r.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = r.Host
+	}
+	return host
+}
+
 // return bcrypted hash of string
 // panic in case of error
 func GetHash(s string) string {

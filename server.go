@@ -62,7 +62,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		csrf.Token(r),
 		GetIp(r),
 		"out",
-		r.Host,
+		GetHost(r),
 	}
 
 	if configuration.Debug {

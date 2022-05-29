@@ -8,7 +8,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// get user ip
+func TestGetHost(t *testing.T) {
+	testCases := []struct {
+		name     string
+		url      string
+		header   *http.Header
+		expected string
+	}{
+		{"URL", "valid.com", nil, "valid.com"},
+		{"NONE", "", nil, ""},
+		{"HEADER", "", &http.Header{"X-Forwarded-Host": []string{"valid.com"}}, "valid.com"},
+		{"URL_HEADER", "invalid.com", &http.Header{"X-Forwarded-Host": []string{"valid.com"}}, "valid.com"},
+	}
+
+	for _, tc := range testCases {
+		// shadow the test case to avoid modifying the test case
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			req := &http.Request{
+				Host: tc.url,
+			}
+			if tc.header != nil {
+				req.Header = *tc.header
+			}
+			assert.Equal(t, GetHost(req), tc.expected)
+		})
+	}
+}
+
 func TestGetIp(t *testing.T) {
 	testCases := []struct {
 		Name          string
