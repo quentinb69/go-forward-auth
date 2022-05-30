@@ -64,16 +64,15 @@ func TestGetValidUserFromFormData(t *testing.T) {
 		nilUser          bool
 		expectedUsername string
 		expectedPassword string
-		expectedName     string
 		expectedDomains  []string
 	}{
-		{"NOMINAL", &FormData{Username: "admin", Password: TestAdminPassword, Csrf: "test", Action: "test"}, "url.com", false, "admin", configuration.Users["admin"].Password, configuration.Users["admin"].Name, configuration.Users["admin"].AllowedDomains},
-		{"BAD_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test", Action: "test"}, "notallowed.net", true, "", "", "", nil},
-		{"NO_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test", Action: "test"}, "", true, "", "", "", nil},
-		{"NO_USERNAME", &FormData{Password: "nope", Csrf: "test", Action: "test"}, "", true, "", "", "", nil},
-		{"NO_PASSWORD", &FormData{Username: "admin", Csrf: "test", Action: "test"}, "", true, "", "", "", nil},
-		{"NOT_EXIST", &FormData{Username: "nope", Password: "test"}, "", true, "", "", "", nil},
-		{"NO_FORMDATA", nil, "", true, "", "", "", nil},
+		{"NOMINAL", &FormData{Username: "admin", Password: TestAdminPassword, Csrf: "test", Action: "test"}, "url.com", false, "admin", configuration.Users["admin"].Password, configuration.Users["admin"].AllowedDomains},
+		{"BAD_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test", Action: "test"}, "notallowed.net", true, "", "", nil},
+		{"NO_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test", Action: "test"}, "", true, "", "", nil},
+		{"NO_USERNAME", &FormData{Password: "nope", Csrf: "test", Action: "test"}, "", true, "", "", nil},
+		{"NO_PASSWORD", &FormData{Username: "admin", Csrf: "test", Action: "test"}, "", true, "", "", nil},
+		{"NOT_EXIST", &FormData{Username: "nope", Password: "test"}, "", true, "", "", nil},
+		{"NO_FORMDATA", nil, "", true, "", "", nil},
 	}
 	for _, tc := range testCases {
 		// shadow the test case to avoid modifying the test case
@@ -89,7 +88,6 @@ func TestGetValidUserFromFormData(t *testing.T) {
 			if u != nil {
 				assert.Equal(t, tc.expectedUsername, u.Username)
 				assert.Equal(t, tc.expectedPassword, u.Password)
-				assert.Equal(t, tc.expectedName, u.Name)
 				assert.Equal(t, tc.expectedDomains, u.AllowedDomains)
 			}
 		})
