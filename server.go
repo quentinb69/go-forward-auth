@@ -124,10 +124,10 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// refresh needed
 	if needRefresh {
-		u := GetUser(ctx.Claims.Subject)
+		ctx.User = GetUser(ctx.Claims.Subject)
 		switch {
 		// bad user
-		case u == nil:
+		case ctx.User == nil:
 			log.Printf("server: user %s not found", ctx.Claims.Subject)
 			ctx.HttpReturnCode = http.StatusForbidden
 			ctx.State = "out"
@@ -142,11 +142,11 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 				SameSite: http.SameSiteLaxMode,
 			}
 		// refreshed user
-		case u != nil:
+		case ctx.User != nil:
 			log.Printf("server: renew jwt for %s", ctx.Ip)
 			ctx.HttpReturnCode = http.StatusFound
 			ctx.State = "in"
-			ctx.GeneratedCookie = CreateJwtCookie(ctx.Claims.Subject, ctx.Claims.Ip, ctx.Claims.Audience)
+			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 			// validate new cookie domain is alllowed
 			if GetValidJwtClaims(ctx.GeneratedCookie, ctx.Ip, ctx.Url) == nil {
 				ctx.HttpReturnCode = http.StatusForbidden

@@ -23,6 +23,46 @@ func TestLoadServer(t *testing.T) {
 	assert.Error(t, LoadServer())
 }
 
+func TestGetUsername(t *testing.T) {
+	u := &User{Username: "User"}
+	c := &Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "Claims"}}
+	f := &FormData{Username: "FormData"}
+
+	testCases := []struct {
+		name             string
+		setUser          bool
+		setClaims        bool
+		setFormdata      bool
+		expectedUsername string
+	}{
+		{"ALL", true, true, true, "User"},
+		{"USER", true, false, false, "User"},
+		{"CLAIMS", false, true, false, "Claims"},
+		{"FORMDATA", false, false, true, "FormData"},
+		{"NONE", false, false, false, ""},
+	}
+	for _, tc := range testCases {
+		// shadow the test case to avoid modifying the test case
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			//set request
+			ctx := &Context{}
+			if tc.setUser {
+				ctx.User = u
+			}
+			if tc.setClaims {
+				ctx.Claims = c
+			}
+			if tc.setFormdata {
+				ctx.FormData = f
+			}
+			assert.Equal(t, tc.expectedUsername, ctx.GetUsername())
+		})
+	}
+}
+
 func TestToMap(t *testing.T) {
 	ctx := &Context{
 		FormData:     &FormData{Username: "Pierre"},
@@ -240,7 +280,7 @@ func TestShowHomeHandler(t *testing.T) {
 		{"bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false},
 		{"ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false},
 		{"refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusFound, "Welcome", true, false},
-		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net", http.StatusFound, "Login", false, true},
+		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net", http.StatusForbidden, "Login", false, true},
 		{"bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true},
 		{"no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false},
 		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusFound, "Login", true, false},
