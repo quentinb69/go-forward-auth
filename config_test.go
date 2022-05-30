@@ -214,7 +214,7 @@ func TestLoadCommandeLine(t *testing.T) {
 	assert.Empty(t, c.ConfigurationFile)
 
 	// debug flag
-	if err := f.Set("d", "True"); err != nil {
+	if err := f.Set("debug", "True"); err != nil {
 		assert.NoError(t, err)
 		t.FailNow() // panic if no fail
 	}
@@ -223,7 +223,7 @@ func TestLoadCommandeLine(t *testing.T) {
 	assert.Empty(t, c.ConfigurationFile)
 
 	// conf flag
-	if err := f.Set("conf", "test"); err != nil {
+	if err := f.Set("config", "test"); err != nil {
 		assert.NoError(t, err)
 		t.FailNow() // panic if no fail
 	}
@@ -319,7 +319,7 @@ func TestLoad(t *testing.T) {
 		flagValue             string
 		expectedErrorContains string
 	}{
-		{"bad_conf", "conf", "bad_conf", "error loading file"},
+		{"bad_conf", "config", "bad_conf", "error loading file"},
 	}
 
 	for _, tc := range testCase {

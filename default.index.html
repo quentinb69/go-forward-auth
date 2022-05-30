@@ -116,7 +116,6 @@ body {
     xhr.open("POST", window.location, true);
     xhr.setRequestHeader("Auth-Form", new URLSearchParams(formData).toString());
     xhr.setRequestHeader("X-CSRF-Token", formData.get("csrf"));
-    //xhr.withFormData = true;
     xhr.onload = (e) => {
       if (xhr.status != 200 && (xhr.status < 300 || xhr.status >=400)) {
     	  // Print error message

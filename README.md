@@ -17,11 +17,10 @@ Use at your own risk, not yet secured. Feel free to PR/Issue if you detect secur
   - return 300 and extend JWT if valid JWT near expiration date
   - return 200 and a "Welcome page" if valid JWT
 - /logout to logout
-  - return 401 if invalid JWT
-  - return 302 if valid JWT (means you logged-out succesfully)
+  - return 302 (means you logged-out succesfully)
 
 To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarded to middlewares by Traefik)
-GFA check if the website is allowed for the user (cf. configuration file and Aud in JWT)
+GFA check if the website is allowed for the user (cf. configuration file and Aud. in JWT)
 
 ## WIP
 - ~~jwt instead of cookie and session~~
@@ -50,4 +49,4 @@ Available as a docker image : [quentinb69/go-forward-auth](https://hub.docker.co
 - [Github.dev](https://github.dev/quentinb69/go-forward-auth/)
 
 ## License
-The source code and binaries of GFA is subject to the MIT License.
+The source code and binaries of GFA are subject to the MIT License.
