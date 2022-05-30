@@ -90,7 +90,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 			case ctx.UserCookie != nil:
 				log.Printf("server: bad domain for %s", ctx.Ip)
 				ctx.HttpReturnCode = http.StatusForbidden
-				ctx.State = "in"
+				ctx.State = "out"
 				ctx.ErrorMessage = "Restricted Area"
 			}
 			LoadTemplate(&w, ctx)

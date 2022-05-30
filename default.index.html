@@ -88,7 +88,7 @@ body {
 	<button class="btn btn-primary form-btn" type="submit">Login</button>
 
 {{ else }}
-  <h1 class="form-title">Welcome {{ .name }}</h1>
+  <h1 class="form-title">Welcome {{ .username }}</h1>
   <div class="error" id="error">{{ .error }}</div>
 
 	<a href="/logout" class="btn btn-primary">Logout</a>
