@@ -118,14 +118,14 @@ func (c *Config) LoadCommandeLine(f *flag.FlagSet) {
 	}
 
 	if !f.HasFlags() {
-		f.StringSlice("conf", c.ConfigurationFile, "Link to one or more configurations files.")
-		f.Bool("d", c.Debug, "Enable some debbug log.")
+		f.StringSlice("config", c.ConfigurationFile, "Link to one or more configurations files.")
+		f.Bool("debug", c.Debug, "Enable some debbug log.")
 	}
 
 	f.Parse(os.Args[1:])
 
-	c.Debug, _ = f.GetBool("d")
-	c.ConfigurationFile, _ = f.GetStringSlice("conf")
+	c.Debug, _ = f.GetBool("debug")
+	c.ConfigurationFile, _ = f.GetStringSlice("config")
 }
 
 // load configuration from file
@@ -178,8 +178,8 @@ func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 
 	// print configuration values
 	if c.Debug {
-		log.Printf("Configuration read:\n\t%v", k)
-		log.Printf("Configuration parsed:\n\t%v", c)
+		log.Printf("Configuration read:\n\t-> %v", k)
+		log.Printf("Configuration parsed:\n\t-> %v", c)
 	}
 
 	return nil

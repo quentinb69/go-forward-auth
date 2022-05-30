@@ -11,22 +11,22 @@ import (
 )
 
 // return sanitized ip
-func GetSanitizeIp(ip string) string {
-	ip = strings.Replace(ip, "\n", "", -1)
-	ip = strings.Replace(ip, "\r", "", -1)
-	ip = strings.Replace(ip, " ", "", -1)
-	return html.EscapeString(ip)
+func GetSanitizeHeader(str string) string {
+	str = strings.Replace(str, "\n", "", -1)
+	str = strings.Replace(str, "\r", "", -1)
+	str = strings.Replace(str, " ", "", -1)
+	return html.EscapeString(str)
 }
 
 // get user ip from request
 func GetIp(r *http.Request) (ip string) {
 
-	ip = GetSanitizeIp(r.Header.Get("X-Real-IP"))
+	ip = GetSanitizeHeader(r.Header.Get("X-Real-IP"))
 	if ip == "" {
-		ip = GetSanitizeIp(r.Header.Get("X-Forwarded-For"))
+		ip = GetSanitizeHeader(r.Header.Get("X-Forwarded-For"))
 	}
 	if ip == "" {
-		ip = GetSanitizeIp(r.RemoteAddr)
+		ip = GetSanitizeHeader(r.RemoteAddr)
 	}
 	// if multiple ips, get the first
 	ip = strings.Split(ip, ",")[0]
@@ -36,6 +36,18 @@ func GetIp(r *http.Request) (ip string) {
 		ip = strings.Join(splittedIp[:len(splittedIp)-1], ":")
 	}
 	return
+}
+
+// get host from request
+func GetHost(r *http.Request) (host string) {
+	host = GetDomain(GetSanitizeHeader(r.Header.Get("X-Original-URL")))
+	if host == "" {
+		host = GetDomain(GetSanitizeHeader(r.Header.Get("X-Forwarded-Host")))
+	}
+	if host == "" {
+		host = GetDomain(GetSanitizeHeader(r.Host))
+	}
+	return host
 }
 
 // return bcrypted hash of string
@@ -63,10 +75,21 @@ func GenerateRandomBytes(n uint) *[]byte {
 
 // extract domain from url
 func GetDomain(url string) string {
-	//remove port from url
-	splittedUrl := strings.Split(url, ":")
+	// remove protocol from url (output domain.com:port/path)
+	splittedUrl := strings.Split(url, "//")
+	if len(splittedUrl) > 1 {
+		url = strings.Join(splittedUrl[1:], "//")
+	} else {
+		url = splittedUrl[0]
+	}
+	// remove path from url (output domain.com:port)
+	url = strings.Split(url, "/")[0]
+	//remove port from url (careful, url can be ipv6) (output domain.com)
+	splittedUrl = strings.Split(url, ":")
 	if len(splittedUrl) > 1 {
 		url = strings.Join(splittedUrl[:len(splittedUrl)-1], ":")
+	} else {
+		url = splittedUrl[0]
 	}
 	return url
 }

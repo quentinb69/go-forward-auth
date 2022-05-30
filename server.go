@@ -62,7 +62,11 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		csrf.Token(r),
 		GetIp(r),
 		"out",
-		r.Host,
+		GetHost(r),
+	}
+
+	if configuration.Debug {
+		log.Printf("server: home request for %s\n\t-> %v", ctx.Ip, r)
 	}
 
 	// get jwt from cookie
@@ -124,6 +128,10 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 // remove cookie and redirect to home
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
+	if configuration.Debug {
+		log.Printf("server: logout request for %s\n\t-> %v", GetIp(r), r)
+	}
+
 	// remove cookie if exists
 	if c, _ := r.Cookie(configuration.CookieName); c != nil {
 		ip := GetIp(r)
@@ -151,6 +159,9 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 func LoadTemplate(w *http.ResponseWriter, ctx *Context) error {
 	if w == nil || ctx == nil {
 		return errors.New("server: responsewriter and context are mandatory")
+	}
+	if configuration.Debug {
+		log.Printf("server: final context for %s\n\t-> %v", ctx.Ip, ctx)
 	}
 	if ctx.HttpReturnCode < 100 || ctx.HttpReturnCode > 599 {
 		(*w).WriteHeader(http.StatusInternalServerError)

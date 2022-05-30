@@ -8,7 +8,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// get user ip
+func TestGetHost(t *testing.T) {
+	testCases := []struct {
+		name     string
+		url      string
+		header   *http.Header
+		expected string
+	}{
+		{"URL", "valid.com", nil, "valid.com"},
+		{"NONE", "", nil, ""},
+		{"HEADER", "", &http.Header{"X-Forwarded-Host": []string{"valid.com"}}, "valid.com"},
+		{"URL_HEADER", "invalid.com", &http.Header{"X-Forwarded-Host": []string{"valid.com"}}, "valid.com"},
+		{"NOT_SANE", "invalid.com", &http.Header{"X-Forwarded-Host": []string{"valid.c\r \rom"}}, "valid.com"},
+	}
+
+	for _, tc := range testCases {
+		// shadow the test case to avoid modifying the test case
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			req := &http.Request{
+				Host: tc.url,
+			}
+			if tc.header != nil {
+				req.Header = *tc.header
+			}
+			assert.Equal(t, GetHost(req), tc.expected)
+		})
+	}
+}
+
 func TestGetIp(t *testing.T) {
 	testCases := []struct {
 		Name          string
@@ -51,6 +80,13 @@ func TestGetIp(t *testing.T) {
 			XForwardedFor: "\n\r",
 			RemoteAddr:    "[2001:db8:0:85a3::ac1f:8001]:13516\n\r",
 			ExpectedIp:    "[2001:db8:0:85a3::ac1f:8001]",
+		},
+		{
+			Name:          "NO_PORT",
+			XRealIP:       "",
+			XForwardedFor: "",
+			RemoteAddr:    "1.2.3.4",
+			ExpectedIp:    "1.2.3.4",
 		},
 		{
 			Name:          "NO",
@@ -159,23 +195,31 @@ func TestGenerateRandomBytes(t *testing.T) {
 
 func TestGetDomain(t *testing.T) {
 	testCases := []struct {
-		Url    string
-		Domain string
+		name   string
+		url    string
+		domain string
 	}{
-		{"my.domain.google.com", "my.domain.google.com"},
-		{"domain", "domain"},
-		{"port.domain:443", "port.domain"},
-		{"", ""},
-		{":888", ""},
-		{"[::1]:123", "[::1]"},
-		{"127.0.0.1:888", "127.0.0.1"},
+		{"NOMINAL", "my.domain.google.com", "my.domain.google.com"},
+		{"NOMINAL2", "domain", "domain"},
+		{"PORT", "port.domain:443", "port.domain"},
+		{"EMPTY", "", ""},
+		{"EMPTY_PORT", ":888", ""},
+		{"IPV6", "[::1]:123", "[::1]"},
+		{"IPV4", "127.0.0.1:888", "127.0.0.1"},
+		{"PROTO", "http://domain.fr", "domain.fr"},
+		{"PROTO_PORT", "http://domain.fr:1234", "domain.fr"},
+		{"PROTO_PATH", "http://domain.fr/test_path/", "domain.fr"},
+		{"PROTO_PATH2", "http://domain.fr/test_path//main/toto", "domain.fr"},
+		{"PROTO_PORT_PATH", "http://domain.fr:8080//test_path/", "domain.fr"},
+		{"PROTO_PORT_PATH2", "http://domain.fr:8080/test_path/:backup", "domain.fr"},
+		{"PROTO_PORT_PATH3", "http://domain.fr/test_path/:toto//test:1", "domain.fr"},
 	}
 	for _, tc := range testCases {
 		// shadow the test case to avoid modifying the test case
 		tc := tc
-		t.Run(fmt.Sprint(tc), func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			assert.Equal(t, tc.Domain, GetDomain(tc.Url))
+			assert.Equal(t, tc.domain, GetDomain(tc.url))
 		})
 	}
 }
