@@ -79,17 +79,17 @@ body {
 <main class="form">
 <form id="form" method="POST">
 {{ if eq .state "out" }}
-        <h1 class="form-title">Login</h1>
-	<div class="error" id="error"></div>
+  <h1 class="form-title">Login</h1>
+	<div class="error" id="error">{{ .error }}</div>
 	
-	<input type="text" class="form-input" name="username" placeholder="Username" id="username" autofocus>
-	<input type="password" class="form-input" name="password" placeholder="Password">
+	<input type="text" autocomplete="username" autocapitalize="none" class="form-input" name="username" placeholder="Username" id="username" autofocus>
+	<input type="password" autocomplete="current-password" autocapitalize="false" class="form-input" name="password" id="password" placeholder="Password">
         
 	<button class="btn btn-primary form-btn" type="submit">Login</button>
 
 {{ else }}
-        <h1 class="form-title">Welcome {{ .username }}</h1>
-	<div class="error" id="error"></div>
+  <h1 class="form-title">Welcome {{ .name }}</h1>
+  <div class="error" id="error">{{ .error }}</div>
 
 	<a href="/logout" class="btn btn-primary">Logout</a>
 {{ end }}

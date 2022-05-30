@@ -6,7 +6,6 @@ import (
 
 type User struct {
 	Username       string
-	Name           string   `koanf:"Name"`
 	Password       string   `koanf:"Password"`
 	AllowedDomains []string `koanf:"AllowedDomains"`
 }
@@ -36,7 +35,7 @@ func GetValidUser(username, password, url string) *User {
 func (u *User) Allowed(url string) (ret bool) {
 	ret = CompareDomains(u.AllowedDomains, url)
 	if !ret {
-		log.Printf("user: %s not allowed domain %s", u.Name, url)
+		log.Printf("user: %s not allowed domain %s", u.Username, url)
 	}
 	return ret
 }

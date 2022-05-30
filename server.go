@@ -16,11 +16,13 @@ type Context struct {
 	User            *User
 	UserCookie      *http.Cookie
 	GeneratedCookie *http.Cookie
+	Claims          *Claims
 	HttpReturnCode  int
 	CsrfToken       string
 	Ip              string
 	State           string
 	Url             string
+	ErrorMessage    string
 }
 
 // set handler for and start listening
@@ -54,15 +56,11 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Init ctx
 	ctx := &Context{
-		nil,
-		nil,
-		nil,
-		nil,
-		http.StatusInternalServerError,
-		csrf.Token(r),
-		GetIp(r),
-		"out",
-		GetHost(r),
+		HttpReturnCode: http.StatusInternalServerError,
+		CsrfToken:      csrf.Token(r),
+		Ip:             GetIp(r),
+		State:          "out",
+		Url:            GetHost(r),
 	}
 
 	if configuration.Debug {
@@ -71,57 +69,93 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// get jwt from cookie
 	ctx.UserCookie, _ = r.Cookie(configuration.CookieName)
-	cl := GetValidJwtClaims(ctx.UserCookie, ctx.Ip, ctx.Url)
+	ctx.Claims = GetValidJwtClaims(ctx.UserCookie, ctx.Ip, ctx.Url)
 
 	// no valid jwt (or expired, or bad domain)
-	if cl == nil {
+	if ctx.Claims == nil {
+
 		ctx.FormData = GetFormData(r)
-		ctx.User = GetValidUserFromFormData(ctx.FormData, ctx.Url)
-		// no valid form data (bad credentials or bad domain)
-		if ctx.User == nil {
-			log.Printf("server: bad access for %s", ctx.Ip)
-			time.Sleep(500 * time.Millisecond)
-			ctx.HttpReturnCode = http.StatusUnauthorized
+
+		if ctx.FormData == nil {
+			switch {
+			// first access (no form nor cookie)
+			case ctx.UserCookie == nil:
+				ctx.HttpReturnCode = http.StatusUnauthorized
+				ctx.State = "out"
+			// bad domain (only cookie)
+			case ctx.UserCookie != nil:
+				log.Printf("server: bad domain for %s", ctx.Ip)
+				ctx.HttpReturnCode = http.StatusForbidden
+				ctx.State = "in"
+				ctx.ErrorMessage = "Restricted Area"
+			}
 			LoadTemplate(&w, ctx)
 			return
 		}
 
-		// here user is valid
-		log.Printf("server: new jwt for %s", ctx.Ip)
-		ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
-		ctx.HttpReturnCode = http.StatusMultipleChoices
-		ctx.State = "in"
+		// here form data is provided
+		ctx.User = GetValidUserFromFormData(ctx.FormData, ctx.Url)
+
+		switch {
+		// bad credentials
+		case ctx.User == nil:
+			time.Sleep(500 * time.Millisecond)
+			ctx.HttpReturnCode = http.StatusUnauthorized
+			ctx.State = "out"
+			ctx.ErrorMessage = "Bad credentials"
+		// data provided ar valid
+		case ctx.User != nil:
+			log.Printf("server: new jwt for %s", ctx.Ip)
+			ctx.HttpReturnCode = http.StatusFound
+			ctx.State = "in"
+			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
+
+		}
 		LoadTemplate(&w, ctx)
 		return
 	}
 
-	ctx.FormData = GenerateFormData(cl.Subject)
-	ctx.User = GetUser(cl.Subject)
-	if ctx.User == nil {
-		log.Printf("server: no user found for %s", ctx.Ip)
-		ctx.HttpReturnCode = http.StatusUnauthorized
-		// reset cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     configuration.CookieName,
-			Value:    "",
-			Expires:  time.Now(),
-			Domain:   configuration.CookieDomain,
-			MaxAge:   -1,
-			Secure:   configuration.Tls,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
+	// if we are here, we should have a valid Jwt
+	needRefresh := time.Until(ctx.Claims.ExpiresAt.Time) < (configuration.TokenRefresh * time.Minute)
+
+	// refresh needed
+	if needRefresh {
+		u := GetUser(ctx.Claims.Subject)
+		switch {
+		// bad user
+		case u == nil:
+			log.Printf("server: user %s not found", ctx.Claims.Subject)
+			ctx.HttpReturnCode = http.StatusForbidden
+			ctx.State = "out"
+			ctx.GeneratedCookie = &http.Cookie{
+				Name:     configuration.CookieName,
+				Value:    "",
+				Expires:  time.Now(),
+				Domain:   configuration.CookieDomain,
+				MaxAge:   -1,
+				Secure:   configuration.Tls,
+				HttpOnly: true,
+				SameSite: http.SameSiteLaxMode,
+			}
+		// refreshed user
+		case u != nil:
+			log.Printf("server: renew jwt for %s", ctx.Ip)
+			ctx.HttpReturnCode = http.StatusFound
+			ctx.State = "in"
+			ctx.GeneratedCookie = CreateJwtCookie(ctx.Claims.Subject, ctx.Claims.Ip, ctx.Claims.Audience)
+			// validate new cookie domain is alllowed
+			if GetValidJwtClaims(ctx.GeneratedCookie, ctx.Ip, ctx.Url) == nil {
+				ctx.HttpReturnCode = http.StatusForbidden
+				ctx.State = "in"
+				ctx.ErrorMessage = "Restricted Area"
+			}
+		}
 		LoadTemplate(&w, ctx)
 		return
 	}
-	ctx.State = "in"
+	// all validations passed, we can load the template
 	ctx.HttpReturnCode = http.StatusOK
-	needRefresh := time.Until(cl.ExpiresAt.Time) < (configuration.TokenRefresh * time.Minute)
-	if needRefresh {
-		log.Printf("server: renew jwt for %s", ctx.Ip)
-		ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
-		ctx.HttpReturnCode = http.StatusMultipleChoices
-	}
+	ctx.State = "in"
 	LoadTemplate(&w, ctx)
 }
 
@@ -146,10 +180,10 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 			SameSite: http.SameSiteLaxMode,
 		})
+	} else {
+		// no cookie, prevent bruteforce with sleeptime
+		time.Sleep(500 * time.Millisecond)
 	}
-
-	// no controle for logout but systematic sleep time
-	time.Sleep(500 * time.Millisecond)
 
 	// return to home
 	http.Redirect(w, r, "/", http.StatusFound)
@@ -171,7 +205,7 @@ func LoadTemplate(w *http.ResponseWriter, ctx *Context) error {
 		http.SetCookie(*w, ctx.GeneratedCookie)
 	}
 	if ctx.State == "in" {
-		(*w).Header().Add("Remote-User", ctx.User.Name)
+		(*w).Header().Add("Remote-User", ctx.GetUsername())
 	}
 	(*w).WriteHeader(ctx.HttpReturnCode)
 	tplData := ctx.ToMap()
@@ -182,18 +216,24 @@ func LoadTemplate(w *http.ResponseWriter, ctx *Context) error {
 }
 
 func (ctx *Context) ToMap() map[string]interface{} {
-	username := ""
-	if ctx.User != nil {
-		username = ctx.User.Name
-	}
-	if username == "" && ctx.FormData != nil {
-		username = ctx.FormData.Username
-	}
-
 	return map[string]interface{}{
-		"username": username,
+		"username": ctx.GetUsername(),
 		"state":    ctx.State,
 		"csrf":     ctx.CsrfToken,
 		"ip":       ctx.Ip,
+		"error":    ctx.ErrorMessage,
+	}
+}
+
+func (ctx *Context) GetUsername() string {
+	switch {
+	case ctx.User != nil:
+		return ctx.User.Username
+	case ctx.Claims != nil:
+		return ctx.Claims.Subject
+	case ctx.FormData != nil:
+		return ctx.FormData.Username
+	default:
+		return ""
 	}
 }
