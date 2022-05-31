@@ -57,7 +57,7 @@ func (c *Config) Valid(init bool) error {
 			return errors.New("config: missing CookieName")
 		}
 		c.CookieName = "GFA"
-		log.Info("config: setting default value", zap.String("Port", c.CookieName))
+		log.Info("config: setting default value", zap.String("CookieName", c.CookieName))
 	}
 	if c.TokenExpire < 1 {
 		if !init {
@@ -184,7 +184,7 @@ func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 	log.Info("Configuration loaded", zap.Strings("files", c.ConfigurationFile))
 
 	// print configuration values
-	log.Sugar().Debug("Configuration done", zap.Any("readed", k.All()), zap.String("loaded", fmt.Sprintf("Config: %+v", c)))
+	log.Sugar().Debug("Configuration", zap.Any("koanf", k.All()), zap.String("global", fmt.Sprintf("%+v", c)))
 
 	return nil
 }

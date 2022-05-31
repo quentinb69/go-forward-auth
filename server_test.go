@@ -150,7 +150,6 @@ func TestLoadTemplate(t *testing.T) {
 			t.Parallel()
 			if tc.cookie && tc.ctx != nil {
 				tc.ctx.GeneratedCookie = &http.Cookie{Name: "TestCookie", Value: "TestValue"}
-
 			}
 			if tc.ctx != nil {
 				tc.ctx.State = tc.state
@@ -170,10 +169,16 @@ func TestLoadTemplate(t *testing.T) {
 				assert.Equal(t, tc.ctx.HttpReturnCode, resp.StatusCode)
 				assert.Contains(t, string(body), tc.expectedBodyContains)
 				assert.Contains(t, string(body), tc.ctx.Ip)
-				/*if tc.ctx.GeneratedCookie != nil && tc.ctx.User.Username != "" && tc.ctx.State == "in" {
-					assert.Contains(t, string(body), tc.ctx.User.Username)
-					assert.Equal(t, tc.ctx.User.Username, resp.Header.Get("Remote-User"))
-				}*/
+				if tc.ctx.GeneratedCookie != nil {
+					cook := resp.Cookies()
+					assert.NotNil(t, cook)
+					assert.Equal(t, tc.ctx.GeneratedCookie.Name, cook[0].Name)
+					assert.Equal(t, tc.ctx.GeneratedCookie.Value, cook[0].Value)
+				}
+				if tc.ctx.State == "in" {
+					assert.Equal(t, tc.ctx.GetUsername(), resp.Header.Get("Remote-User"))
+				}
+
 			} else {
 				assert.ErrorContains(t, err, "mandatory")
 				assert.Empty(t, string(body))
@@ -289,7 +294,7 @@ func TestShowHomeHandler(t *testing.T) {
 		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			//t.Parallel()
+			t.Parallel()
 
 			//set request
 			req := httptest.NewRequest("POST", "/", nil)

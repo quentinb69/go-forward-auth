@@ -113,7 +113,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// if we are here, we should have a valid Jwt
+	// from here, we have a valid Jwt
 	needRefresh := time.Until(ctx.Claims.ExpiresAt.Time) < (configuration.TokenRefresh * time.Minute)
 
 	// refresh needed
@@ -151,7 +151,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		LoadTemplate(&w, ctx)
 		return
 	}
-	// all validations passed, we can load the template
+	// all validations passed
 	ctx.HttpReturnCode = http.StatusOK
 	ctx.State = "in"
 	LoadTemplate(&w, ctx)

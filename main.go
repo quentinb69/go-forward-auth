@@ -12,7 +12,7 @@ import (
 var configuration *Config
 var log *zap.Logger
 
-// initilise configuration and logging
+// initialize global configuration and logging
 func LoadConfigurationAndLogger() error {
 
 	// init loader
@@ -37,7 +37,7 @@ func LoadConfigurationAndLogger() error {
 		return err
 	}
 
-	// update loader level after init
+	// update log level after configuration is loaded
 	atomLvl, err := zap.ParseAtomicLevel(configuration.LogLevel)
 	if err != nil {
 		log.Info("main: update log level", zap.String("level", configuration.LogLevel))
