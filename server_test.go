@@ -291,7 +291,7 @@ func TestShowHomeHandler(t *testing.T) {
 		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusMultipleChoices, "Login", false, true, false},
 		{"bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true, false},
 		{"no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, false},
-		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusOK, "Login", true, false, false},
+		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusMultipleChoices, "Login", true, false, false},
 
 		{"FWD_no_jwt_no_cred", nil, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, true},
 		{"FWD_bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusForbidden, "Login", false, false, true},
@@ -301,7 +301,7 @@ func TestShowHomeHandler(t *testing.T) {
 		{"FWD_bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusMultipleChoices, "Login", false, true, true},
 		{"FWD_bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true, true},
 		{"FWD_no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, true},
-		{"FWD_no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusOK, "Login", true, false, true},
+		{"FWD_no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusMultipleChoices, "Login", true, false, true},
 	}
 	for _, tc := range testCases {
 		// shadow the test case to avoid modifying the test case

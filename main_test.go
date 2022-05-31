@@ -7,10 +7,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/knadh/koanf"
-	flag "github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 )
 
 // Crypted password
@@ -59,14 +56,9 @@ var TestCookie = map[string]*http.Cookie{
 
 func TestMain(m *testing.M) {
 
-	k := koanf.New(".")
-	f := flag.NewFlagSet("config", flag.ContinueOnError)
-	log, _ = zap.NewDevelopment()
-
 	configuration = &Config{}
 	configuration.ConfigurationFile = []string{"test.config.yml"}
-	configuration.Load(k, f)
-	configuration.Valid(true)
+	LoadConfigurationAndLogger()
 
 	os.Exit(m.Run())
 }
