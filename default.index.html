@@ -79,17 +79,17 @@ body {
 <main class="form">
 <form id="form" method="POST">
 {{ if eq .state "out" }}
-        <h1 class="form-title">Login</h1>
-	<div class="error" id="error"></div>
+  <h1 class="form-title">Login</h1>
+	<div class="error" id="error">{{ .error }}</div>
 	
-	<input type="text" class="form-input" name="username" placeholder="Username" id="username" autofocus>
-	<input type="password" class="form-input" name="password" placeholder="Password">
+	<input type="text" autocomplete="username" autocapitalize="none" class="form-input" name="username" placeholder="Username" id="username" autofocus>
+	<input type="password" autocomplete="current-password" autocapitalize="none" class="form-input" name="password" id="password" placeholder="Password">
         
 	<button class="btn btn-primary form-btn" type="submit">Login</button>
 
 {{ else }}
-        <h1 class="form-title">Welcome {{ .username }}</h1>
-	<div class="error" id="error"></div>
+  <h1 class="form-title">Welcome {{ .username }}</h1>
+  <div class="error" id="error">{{ .error }}</div>
 
 	<a href="/logout" class="btn btn-primary">Logout</a>
 {{ end }}
@@ -116,6 +116,8 @@ body {
     xhr.open("POST", window.location, true);
     xhr.setRequestHeader("Auth-Form", new URLSearchParams(formData).toString());
     xhr.setRequestHeader("X-CSRF-Token", formData.get("csrf"));
+    // needed for sso cookie
+    xhr.withCredentials = true;
     xhr.onload = (e) => {
       if (xhr.status != 200 && (xhr.status < 300 || xhr.status >=400)) {
     	  // Print error message

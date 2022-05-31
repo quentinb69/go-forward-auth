@@ -1,11 +1,11 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 
 	"github.com/gorilla/schema"
+	"go.uber.org/zap"
 )
 
 // Parse http request to a FormData struct
@@ -28,7 +28,7 @@ func GetFormData(r *http.Request) (f *FormData) {
 	f = &FormData{}
 	// Get the body and decode into FormData
 	if err := decoder.Decode(f, urlCreds); err != nil {
-		log.Printf("formdata: error decoding formdata\n\t-> %v", err)
+		log.Error("formdata: error decoding formdata", zap.Error(err))
 		return nil
 	}
 
@@ -45,12 +45,12 @@ func GenerateFormData(username string) *FormData {
 // Validate FormData and user
 func GetValidUserFromFormData(f *FormData, url string) *User {
 	if f == nil {
-		log.Print("formdata: no formdata provided")
+		log.Error("formdata: no formdata provided")
 		return nil
 	}
 
 	if f.Password == "" || f.Username == "" {
-		log.Print("formdata: missing password or username")
+		log.Error("formdata: missing password or username")
 		return nil
 	}
 

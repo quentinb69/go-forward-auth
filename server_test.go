@@ -23,13 +23,54 @@ func TestLoadServer(t *testing.T) {
 	assert.Error(t, LoadServer())
 }
 
+func TestGetUsername(t *testing.T) {
+	u := &User{Username: "User"}
+	c := &Claims{RegisteredClaims: jwt.RegisteredClaims{Subject: "Claims"}}
+	f := &FormData{Username: "FormData"}
+
+	testCases := []struct {
+		name             string
+		setUser          bool
+		setClaims        bool
+		setFormdata      bool
+		expectedUsername string
+	}{
+		{"ALL", true, true, true, "User"},
+		{"USER", true, false, false, "User"},
+		{"CLAIMS", false, true, false, "Claims"},
+		{"FORMDATA", false, false, true, "FormData"},
+		{"NONE", false, false, false, ""},
+	}
+	for _, tc := range testCases {
+		// shadow the test case to avoid modifying the test case
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			//set request
+			ctx := &Context{}
+			if tc.setUser {
+				ctx.User = u
+			}
+			if tc.setClaims {
+				ctx.Claims = c
+			}
+			if tc.setFormdata {
+				ctx.FormData = f
+			}
+			assert.Equal(t, tc.expectedUsername, ctx.GetUsername())
+		})
+	}
+}
+
 func TestToMap(t *testing.T) {
 	ctx := &Context{
-		FormData:  &FormData{Username: "Pierre"},
-		User:      &User{Username: "Jean"},
-		State:     "TestState",
-		CsrfToken: "TestCsrf",
-		Ip:        "TestIp",
+		FormData:     &FormData{Username: "Pierre"},
+		User:         &User{Username: "Jean"},
+		State:        "TestState",
+		CsrfToken:    "TestCsrf",
+		Ip:           "TestIp",
+		ErrorMessage: "TestError",
 	}
 
 	expectedMap := map[string]interface{}{
@@ -37,6 +78,7 @@ func TestToMap(t *testing.T) {
 		"state":    ctx.State,
 		"csrf":     ctx.CsrfToken,
 		"ip":       ctx.Ip,
+		"error":    ctx.ErrorMessage,
 	}
 
 	testCases := []struct {
@@ -46,7 +88,7 @@ func TestToMap(t *testing.T) {
 		noFormData bool
 		noUser     bool
 	}{
-		{"empty", &Context{}, map[string]interface{}{"username": "", "state": "", "csrf": "", "ip": ""}, true, true},
+		{"empty", &Context{}, map[string]interface{}{"username": "", "state": "", "csrf": "", "ip": "", "error": ""}, true, true},
 		{"formdata", ctx, expectedMap, false, true},
 		{"user", ctx, expectedMap, true, false},
 		{"formdata and user", ctx, expectedMap, false, false},
@@ -79,7 +121,7 @@ func TestToMap(t *testing.T) {
 func TestLoadTemplate(t *testing.T) {
 	ctx := &Context{
 		FormData:       &FormData{Username: "Pierre"},
-		User:           &User{Username: "Jean", Name: "JEAN"},
+		User:           &User{Username: "Jean"},
 		State:          "",
 		CsrfToken:      "TestCsrf",
 		Ip:             "TestIp",
@@ -105,10 +147,9 @@ func TestLoadTemplate(t *testing.T) {
 		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()
 			if tc.cookie && tc.ctx != nil {
 				tc.ctx.GeneratedCookie = &http.Cookie{Name: "TestCookie", Value: "TestValue"}
-
 			}
 			if tc.ctx != nil {
 				tc.ctx.State = tc.state
@@ -123,15 +164,23 @@ func TestLoadTemplate(t *testing.T) {
 			// assert
 			if tc.ctx != nil {
 				if tc.ctx.HttpReturnCode == 0 {
-					tc.ctx.HttpReturnCode = 500
+					tc.ctx.HttpReturnCode = http.StatusNotImplemented
 				}
 				assert.Equal(t, tc.ctx.HttpReturnCode, resp.StatusCode)
 				assert.Contains(t, string(body), tc.expectedBodyContains)
 				assert.Contains(t, string(body), tc.ctx.Ip)
-				if tc.ctx.GeneratedCookie != nil && tc.ctx.User.Name != "" && tc.ctx.State == "in" {
-					assert.Contains(t, string(body), tc.ctx.User.Name)
-					assert.Equal(t, tc.ctx.User.Name, resp.Header.Get("Remote-User"))
+				if tc.ctx.GeneratedCookie != nil {
+					cook := resp.Cookies()
+					assert.NotNil(t, cook)
+					if assert.NotNil(t, cook[0]) {
+						assert.Equal(t, tc.ctx.GeneratedCookie.Name, cook[0].Name)
+						assert.Equal(t, tc.ctx.GeneratedCookie.Value, cook[0].Value)
+					}
 				}
+				if tc.ctx.State == "in" {
+					assert.Equal(t, tc.ctx.GetUsername(), resp.Header.Get("Remote-User"))
+				}
+
 			} else {
 				assert.ErrorContains(t, err, "mandatory")
 				assert.Empty(t, string(body))
@@ -188,7 +237,7 @@ func TestShowHomeHandler(t *testing.T) {
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 			Issuer:    "GFA",
-			Audience:  jwt.ClaimStrings{"url.net"},
+			Audience:  jwt.ClaimStrings{".*"},
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, cl)
@@ -223,23 +272,36 @@ func TestShowHomeHandler(t *testing.T) {
 	bad_header := &http.Header{"Auth-Form": []string{"password=test&username=jacques&csrf=test&action=test"}}
 
 	testCases := []struct {
-		name                 string
-		cookie               *http.Cookie
-		header               *http.Header
-		ip                   string
-		url                  string
-		expectedHttpCode     int
-		expectedBodyContains string
+		name                  string
+		cookie                *http.Cookie
+		header                *http.Header
+		ip                    string
+		url                   string
+		expectedHttpCode      int
+		expectedBodyContains  string
+		expectedConnectCookie bool
+		expectedRemoveCookie  bool
+		forwardurl            bool
 	}{
-		{"no_jwt_no_cred", nil, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login"},
-		{"bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login"},
-		{"bad_url_no_cred", TestCookie["altered"], nil, "1.2.3.4", "not_valid.net", http.StatusUnauthorized, "Login"},
-		{"ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome"},
-		{"refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusMultipleChoices, "Welcome"},
-		{"bad_user_url_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login"},
-		{"bad_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "not_valid.net", http.StatusUnauthorized, "Login"},
-		{"no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login"},
-		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusMultipleChoices, "Login"},
+		{"no_jwt_no_cred", nil, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, false},
+		{"bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusForbidden, "Login", false, false, false},
+		{"bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false, false},
+		{"ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false, false},
+		{"refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusMultipleChoices, "Welcome", true, false, false},
+		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusMultipleChoices, "Login", false, true, false},
+		{"bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true, false},
+		{"no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, false},
+		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusMultipleChoices, "Login", true, false, false},
+
+		{"FWD_no_jwt_no_cred", nil, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, true},
+		{"FWD_bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusForbidden, "Login", false, false, true},
+		{"FWD_bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false, true},
+		{"FWD_ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false, true},
+		{"FWD_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusMultipleChoices, "Welcome", true, false, true},
+		{"FWD_bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusMultipleChoices, "Login", false, true, true},
+		{"FWD_bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true, true},
+		{"FWD_no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, true},
+		{"FWD_no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusMultipleChoices, "Login", true, false, true},
 	}
 	for _, tc := range testCases {
 		// shadow the test case to avoid modifying the test case
@@ -249,13 +311,26 @@ func TestShowHomeHandler(t *testing.T) {
 
 			//set request
 			req := httptest.NewRequest("POST", "/", nil)
-			req.Host = tc.url
+
+			// set url
+			if tc.forwardurl {
+				req.Host = "auth:443"
+				req.Header.Add("X-Forwarded-Host", tc.url)
+			} else {
+				req.Host = tc.url
+			}
+
+			// set cookie
 			if tc.cookie != nil {
 				req.AddCookie(tc.cookie)
 			}
+
+			// set crendentials
 			if tc.header != nil {
 				req.Header = *tc.header
 			}
+
+			// set ip
 			req.RemoteAddr = tc.ip
 
 			// make request
@@ -267,6 +342,15 @@ func TestShowHomeHandler(t *testing.T) {
 			// assert
 			assert.Equal(t, tc.expectedHttpCode, resp.StatusCode)
 			assert.Contains(t, string(body), tc.expectedBodyContains)
+			if tc.expectedConnectCookie {
+				assert.Len(t, resp.Cookies(), 1)
+			}
+			if tc.expectedRemoveCookie {
+				assert.Len(t, resp.Cookies(), 1)
+			}
+			if !tc.expectedRemoveCookie && !tc.expectedConnectCookie {
+				assert.Len(t, resp.Cookies(), 0)
+			}
 		})
 	}
 }

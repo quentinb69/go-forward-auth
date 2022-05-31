@@ -23,22 +23,19 @@ TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (
 # number fo bcrypt iterations (default 10) (not used yet)
 #HashCost: 10
 
-# enable some debug output
-#Debug: false
+# set log level
+#LogLevel: info
 
 # list of users :
-#   - key is the username used for connexion
+#   - key is the username used for connexion, and the value passed by Remote-User Header
 #   - values are :
-#     - Name : The real name of User, and the value passed by Remote-User Header
 #     - Password : is the bcrypt hash of the password (https://bcrypt.online/)
 #     - AllowedDomains : list of regex for domains allowed for this user, use * for all
 #Users:
 #  - admin:
-#      Name: ADMINISTRATEUR
 #      Password: $2y$10$t6XPeRTf5.a.Gb3I/lYq7ukuOpx6fsJRstEXNfOP4jXjjGGZ2Af72 # pass
 #      AllowedDomains: ".*"
 #  - jean:
-#      Name: JEAN
 #      Password: $2y$10$PpzVO0zStuQKJAHmdIBqQuagxkc732nnGR.Iet4SE5tJR1FjOuo.6 # pwd
 #      AllowedDomains:
 #        - "allowed.com"

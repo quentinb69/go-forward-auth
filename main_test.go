@@ -7,8 +7,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/knadh/koanf"
-	flag "github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -58,22 +56,24 @@ var TestCookie = map[string]*http.Cookie{
 
 func TestMain(m *testing.M) {
 
-	k := koanf.New(".")
-	f := flag.NewFlagSet("config", flag.ContinueOnError)
-
 	configuration = &Config{}
 	configuration.ConfigurationFile = []string{"test.config.yml"}
-	configuration.Load(k, f)
-	configuration.Valid(true)
+	LoadConfigurationAndLogger()
 
 	os.Exit(m.Run())
 }
 
 func TestLoadConfiguration(t *testing.T) {
 	backup := configuration
-	defer func() { configuration = backup }()
+	logbackup := log
+	defer func() { configuration = backup; log = logbackup }()
 	configuration = nil
+	log = nil
 	assert.Nil(t, configuration)
-	LoadConfiguration()
+	assert.Nil(t, log)
+	assert.Error(t, LoadConfigurationAndLogger())
+	configuration.ConfigurationFile = []string{"test.config.yml"}
+	assert.NoError(t, LoadConfigurationAndLogger())
 	assert.NotNil(t, configuration)
+	assert.NotNil(t, log)
 }
