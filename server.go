@@ -87,7 +87,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 				ctx.State = "out"
 				ctx.ErrorMessage = "Restricted Area"
 			}
-			LoadTemplate(&w, ctx)
+			log.Info("Loading Template", zap.Error(LoadTemplate(&w, ctx)))
 			return
 		}
 
@@ -109,7 +109,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 
 		}
-		LoadTemplate(&w, ctx)
+		log.Info("Loading Template", zap.Error(LoadTemplate(&w, ctx)))
 		return
 	}
 
@@ -148,13 +148,13 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 				ctx.ErrorMessage = "Restricted Area"
 			}
 		}
-		LoadTemplate(&w, ctx)
+		log.Info("Loading Template", zap.Error(LoadTemplate(&w, ctx)))
 		return
 	}
 	// all validations passed
 	ctx.HttpReturnCode = http.StatusOK
 	ctx.State = "in"
-	LoadTemplate(&w, ctx)
+	log.Info("Loading Template", zap.Error(LoadTemplate(&w, ctx)))
 }
 
 // remove cookie and redirect to home
