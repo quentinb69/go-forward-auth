@@ -151,7 +151,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 	// all validations passed
 	ctx.HttpReturnCode = http.StatusOK
 	ctx.State = "in"
-	log.Info("Loading Template", zap.Int("status", ctx.HttpReturnCode), zap.Error(LoadTemplate(&w, ctx)))
+	log.Debug("Loading Template", zap.Int("status", ctx.HttpReturnCode), zap.Error(LoadTemplate(&w, ctx)))
 }
 
 // remove cookie and redirect to home
