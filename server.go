@@ -103,7 +103,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		// data provided ar valid
 		case ctx.User != nil:
 			log.Info("server: new jwt", zap.String("ip", ctx.Ip))
-			ctx.HttpReturnCode = http.StatusFound
+			ctx.HttpReturnCode = http.StatusOK
 			ctx.State = "in"
 			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 
@@ -137,12 +137,12 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		// refreshed user
 		case ctx.User != nil:
 			log.Info("server: renew jwt", zap.String("ip", ctx.Ip))
-			ctx.HttpReturnCode = http.StatusFound
+			ctx.HttpReturnCode = http.StatusOK
 			ctx.State = "in"
 			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 			// validate new cookie domain is alllowed
 			if GetValidJwtClaims(ctx.GeneratedCookie, ctx.Ip, ctx.Url) == nil {
-				ctx.HttpReturnCode = http.StatusFound
+				ctx.HttpReturnCode = http.StatusForbidden
 				ctx.State = "in"
 				ctx.ErrorMessage = "Restricted Area"
 			}

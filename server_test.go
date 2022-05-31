@@ -147,7 +147,7 @@ func TestLoadTemplate(t *testing.T) {
 		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()
 			if tc.cookie && tc.ctx != nil {
 				tc.ctx.GeneratedCookie = &http.Cookie{Name: "TestCookie", Value: "TestValue"}
 			}
@@ -287,21 +287,21 @@ func TestShowHomeHandler(t *testing.T) {
 		{"bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusForbidden, "Login", false, false, false},
 		{"bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false, false},
 		{"ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false, false},
-		{"refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusFound, "Welcome", true, false, false},
-		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusFound, "Login", false, true, false},
+		{"refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", true, false, false},
+		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusForbidden, "Login", false, true, false},
 		{"bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true, false},
 		{"no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, false},
-		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusFound, "Login", true, false, false},
+		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusOK, "Login", true, false, false},
 
 		{"FWD_no_jwt_no_cred", nil, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, true},
 		{"FWD_bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusForbidden, "Login", false, false, true},
 		{"FWD_bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false, true},
 		{"FWD_ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false, true},
-		{"FWD_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusFound, "Welcome", true, false, true},
-		{"FWD_bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusFound, "Login", false, true, true},
+		{"FWD_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", true, false, true},
+		{"FWD_bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusForbidden, "Login", false, true, true},
 		{"FWD_bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true, true},
 		{"FWD_no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, true},
-		{"FWD_no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusFound, "Login", true, false, true},
+		{"FWD_no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusOK, "Login", true, false, true},
 	}
 	for _, tc := range testCases {
 		// shadow the test case to avoid modifying the test case
