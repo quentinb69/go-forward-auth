@@ -54,7 +54,7 @@ func LoadConfigurationAndLogger() error {
 
 	// update log level after configuration is loaded
 	atomLvl, err := zap.ParseAtomicLevel(configuration.LogLevel)
-	if err != nil {
+	if err == nil {
 		log.Info("main: update log level", zap.String("level", configuration.LogLevel))
 		atom.SetLevel(atomLvl.Level())
 		// show configuration value in debug mode
