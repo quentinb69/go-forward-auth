@@ -82,7 +82,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 				ctx.State = "out"
 			// bad domain (only cookie)
 			case ctx.UserCookie != nil:
-				log.Error("server: bad domain", zap.String("ip", ctx.Ip))
+				log.Error("server: bad token", zap.String("ip", ctx.Ip))
 				ctx.HttpReturnCode = http.StatusForbidden
 				ctx.State = "out"
 				ctx.ErrorMessage = "Restricted Area"
@@ -143,7 +143,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 			// validate new cookie domain is alllowed
 			if GetValidJwtClaims(ctx.GeneratedCookie, ctx.Ip, ctx.Url) == nil {
-				ctx.HttpReturnCode = http.StatusForbidden
+				ctx.HttpReturnCode = http.StatusFound
 				ctx.State = "in"
 				ctx.ErrorMessage = "Restricted Area"
 			}
