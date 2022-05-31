@@ -103,7 +103,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		// data provided ar valid
 		case ctx.User != nil:
 			log.Info("server: new jwt", zap.String("ip", ctx.Ip))
-			ctx.HttpReturnCode = http.StatusOK
+			ctx.HttpReturnCode = http.StatusMultipleChoices
 			ctx.State = "in"
 			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 
