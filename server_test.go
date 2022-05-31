@@ -164,7 +164,7 @@ func TestLoadTemplate(t *testing.T) {
 			// assert
 			if tc.ctx != nil {
 				if tc.ctx.HttpReturnCode == 0 {
-					tc.ctx.HttpReturnCode = 500
+					tc.ctx.HttpReturnCode = http.StatusNotImplemented
 				}
 				assert.Equal(t, tc.ctx.HttpReturnCode, resp.StatusCode)
 				assert.Contains(t, string(body), tc.expectedBodyContains)
@@ -172,8 +172,10 @@ func TestLoadTemplate(t *testing.T) {
 				if tc.ctx.GeneratedCookie != nil {
 					cook := resp.Cookies()
 					assert.NotNil(t, cook)
-					assert.Equal(t, tc.ctx.GeneratedCookie.Name, cook[0].Name)
-					assert.Equal(t, tc.ctx.GeneratedCookie.Value, cook[0].Value)
+					if assert.NotNil(t, cook[0]) {
+						assert.Equal(t, tc.ctx.GeneratedCookie.Name, cook[0].Name)
+						assert.Equal(t, tc.ctx.GeneratedCookie.Value, cook[0].Value)
+					}
 				}
 				if tc.ctx.State == "in" {
 					assert.Equal(t, tc.ctx.GetUsername(), resp.Header.Get("Remote-User"))

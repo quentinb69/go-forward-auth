@@ -56,11 +56,10 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Init ctx
 	ctx := &Context{
-		HttpReturnCode: http.StatusInternalServerError,
-		CsrfToken:      csrf.Token(r),
-		Ip:             GetIp(r),
-		State:          "out",
-		Url:            GetHost(r),
+		CsrfToken: csrf.Token(r),
+		Ip:        GetIp(r),
+		State:     "out",
+		Url:       GetHost(r),
 	}
 
 	log.Sugar().Debug("server: home requested", zap.String("ip", ctx.Ip), "request", r)
@@ -195,7 +194,7 @@ func LoadTemplate(w *http.ResponseWriter, ctx *Context) error {
 	log.Sugar().Debug("server: final context", zap.String("ip", ctx.Ip), "context", ctx)
 
 	if ctx.HttpReturnCode < 100 || ctx.HttpReturnCode > 599 {
-		(*w).WriteHeader(http.StatusInternalServerError)
+		(*w).WriteHeader(http.StatusNotImplemented)
 		return errors.New("server: bad http return code")
 	}
 	if ctx.GeneratedCookie != nil {
