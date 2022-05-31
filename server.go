@@ -137,13 +137,11 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		// refreshed user
 		case ctx.User != nil:
 			log.Info("server: renew jwt", zap.String("ip", ctx.Ip))
-			ctx.HttpReturnCode = http.StatusOK
+			ctx.HttpReturnCode = http.StatusMultipleChoices
 			ctx.State = "in"
 			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
-			// validate new cookie domain is alllowed
+			// validate new cookie domain is allowed
 			if GetValidJwtClaims(ctx.GeneratedCookie, ctx.Ip, ctx.Url) == nil {
-				ctx.HttpReturnCode = http.StatusForbidden
-				ctx.State = "in"
 				ctx.ErrorMessage = "Restricted Area"
 			}
 		}
