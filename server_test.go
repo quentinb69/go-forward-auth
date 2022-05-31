@@ -279,16 +279,27 @@ func TestShowHomeHandler(t *testing.T) {
 		expectedBodyContains  string
 		expectedConnectCookie bool
 		expectedRemoveCookie  bool
+		forwardurl            bool
 	}{
-		{"no_jwt_no_cred", nil, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false},
-		{"bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusForbidden, "Login", false, false},
-		{"bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false},
-		{"ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false},
-		{"refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusFound, "Welcome", true, false},
-		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusForbidden, "Login", false, true},
-		{"bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true},
-		{"no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false},
-		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusFound, "Login", true, false},
+		{"no_jwt_no_cred", nil, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, false},
+		{"bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusForbidden, "Login", false, false, false},
+		{"bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false, false},
+		{"ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false, false},
+		{"refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusFound, "Welcome", true, false, false},
+		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusFound, "Login", false, true, false},
+		{"bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true, false},
+		{"no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, false},
+		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusFound, "Login", true, false, false},
+
+		{"FWD_no_jwt_no_cred", nil, nil, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, true},
+		{"FWD_bad_jwt_no_cred", TestCookie["altered"], nil, "1.2.3.4", "url.net", http.StatusForbidden, "Login", false, false, true},
+		{"FWD_bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false, true},
+		{"FWD_ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false, true},
+		{"FWD_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusFound, "Welcome", true, false, true},
+		{"FWD_bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusFound, "Login", false, true, true},
+		{"FWD_bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true, true},
+		{"FWD_no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false, true},
+		{"FWD_no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusFound, "Login", true, false, true},
 	}
 	for _, tc := range testCases {
 		// shadow the test case to avoid modifying the test case
@@ -298,13 +309,26 @@ func TestShowHomeHandler(t *testing.T) {
 
 			//set request
 			req := httptest.NewRequest("POST", "/", nil)
-			req.Host = tc.url
+
+			// set url
+			if tc.forwardurl {
+				req.Host = "auth:443"
+				req.Header.Add("X-Forwarded-Host", tc.url)
+			} else {
+				req.Host = tc.url
+			}
+
+			// set cookie
 			if tc.cookie != nil {
 				req.AddCookie(tc.cookie)
 			}
+
+			// set crendentials
 			if tc.header != nil {
 				req.Header = *tc.header
 			}
+
+			// set ip
 			req.RemoteAddr = tc.ip
 
 			// make request

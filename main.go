@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/knadh/koanf"
@@ -15,9 +16,23 @@ var log *zap.Logger
 // initialize global configuration and logging
 func LoadConfigurationAndLogger() error {
 
-	// init loader
+	// init logger
 	atom := zap.NewAtomicLevel()
-	encoderCfg := zap.NewProductionEncoderConfig()
+	encoderCfg := zapcore.EncoderConfig{
+		TimeKey:        "T",
+		LevelKey:       "L",
+		NameKey:        "N",
+		CallerKey:      "C",
+		FunctionKey:    zapcore.OmitKey,
+		MessageKey:     "M",
+		StacktraceKey:  "S",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.StringDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	}
+
 	log = zap.New(zapcore.NewCore(
 		zapcore.NewConsoleEncoder(encoderCfg),
 		zapcore.Lock(os.Stdout),
@@ -42,6 +57,8 @@ func LoadConfigurationAndLogger() error {
 	if err != nil {
 		log.Info("main: update log level", zap.String("level", configuration.LogLevel))
 		atom.SetLevel(atomLvl.Level())
+		// show configuration value in debug mode
+		log.Sugar().Debug("Configuration", zap.Any("koanf", k.All()), zap.String("global", fmt.Sprintf("%+v", configuration)))
 	}
 
 	return nil

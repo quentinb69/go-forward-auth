@@ -183,8 +183,5 @@ func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 
 	log.Info("Configuration loaded", zap.Strings("files", c.ConfigurationFile))
 
-	// print configuration values
-	log.Sugar().Debug("Configuration", zap.Any("koanf", k.All()), zap.String("global", fmt.Sprintf("%+v", c)))
-
 	return nil
 }
