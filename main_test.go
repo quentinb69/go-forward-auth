@@ -10,6 +10,7 @@ import (
 	"github.com/knadh/koanf"
 	flag "github.com/spf13/pflag"
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 )
 
 // Crypted password
@@ -60,6 +61,7 @@ func TestMain(m *testing.M) {
 
 	k := koanf.New(".")
 	f := flag.NewFlagSet("config", flag.ContinueOnError)
+	log, _ = zap.NewDevelopment()
 
 	configuration = &Config{}
 	configuration.ConfigurationFile = []string{"test.config.yml"}
@@ -71,9 +73,15 @@ func TestMain(m *testing.M) {
 
 func TestLoadConfiguration(t *testing.T) {
 	backup := configuration
-	defer func() { configuration = backup }()
+	logbackup := log
+	defer func() { configuration = backup; log = logbackup }()
 	configuration = nil
+	log = nil
 	assert.Nil(t, configuration)
-	LoadConfiguration()
+	assert.Nil(t, log)
+	assert.Error(t, LoadConfigurationAndLogger())
+	configuration.ConfigurationFile = []string{"test.config.yml"}
+	assert.NoError(t, LoadConfigurationAndLogger())
 	assert.NotNil(t, configuration)
+	assert.NotNil(t, log)
 }

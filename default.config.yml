@@ -23,8 +23,8 @@ TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (
 # number fo bcrypt iterations (default 10) (not used yet)
 #HashCost: 10
 
-# enable some debug output
-#Debug: false
+# set log level
+#LogLevel: info
 
 # list of users :
 #   - key is the username used for connexion, and the value passed by Remote-User Header

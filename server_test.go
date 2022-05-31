@@ -280,7 +280,7 @@ func TestShowHomeHandler(t *testing.T) {
 		{"bad_url_no_cred", TestCookie["valid"], nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, false},
 		{"ok_jwt_no_cred", TestCookie["valid"], nil, "1.2.3.4", "url.net", http.StatusOK, "Welcome", false, false},
 		{"refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "url.net", http.StatusFound, "Welcome", true, false},
-		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net", http.StatusForbidden, "Login", false, true},
+		{"bad_url_refresh_jwt_no_cred", refreshCookieOk, nil, "1.2.3.4", "other.url.net.bad", http.StatusForbidden, "Login", false, true},
 		{"bad_user_refresh_jwt_no_cred", refreshCookieBadUser, nil, "1.2.3.4", "not_valid.net", http.StatusForbidden, "Login", false, true},
 		{"no_jwt_bad_cred", nil, bad_header, "1.2.3.4", "url.net", http.StatusUnauthorized, "Login", false, false},
 		{"no_jwt_ok_cred", nil, good_header, "1.2.3.4", "url.net", http.StatusFound, "Login", true, false},
@@ -289,7 +289,7 @@ func TestShowHomeHandler(t *testing.T) {
 		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()
 
 			//set request
 			req := httptest.NewRequest("POST", "/", nil)

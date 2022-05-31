@@ -1,31 +1,14 @@
 ---
-# Listen port
 Port: 9999
-
-# HTTPS settings (Tls to false means HTTP)
 Tls: false
-#PrivateKey: /opt/gfa/ssl/server.key
-#Certificate: /opt/gfa/ssl/server.crt
-
-# Cookie and session configuration
-CookieDomain: "" # leave empty to disable sso
+CookieDomain: "test_domain"
 CookieName: "_test_gfa"
-TokenExpire: 90 # jwt expiration delay in minutes
-TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (0 to disable refresh)
-
-# template file for login/out
+TokenExpire: 90
+TokenRefresh: 2
 HtmlFile: default.index.html
-
-# key to sign jwt. If not provided, will be generated
 JwtSecretKey: "1111111111111111111111111111111111111111111111111111111111111111"
 CsrfSecretKey: "22222222222222222222222222222222"
-# number fo bcrypt iterations (default 10) (not used yet)
-#HashCost: 10
-
-# enable some debug output
-Debug: true
-
-# users
+LogLevel: debug
 Users:
   - admin:
       Password: $2y$10$t6XPeRTf5.a.Gb3I/lYq7ukuOpx6fsJRstEXNfOP4jXjjGGZ2Af72 # pass
@@ -35,3 +18,4 @@ Users:
       AllowedDomains:
         - "allowed.com"
         - ".*website"
+        - "url.net"

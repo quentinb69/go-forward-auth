@@ -27,6 +27,7 @@ func TestValid(t *testing.T) {
 		SetCookieName         string
 		SetTokenRefresh       time.Duration
 		SetTokenExpire        time.Duration
+		SetLogLevel           string
 	}{
 		{
 			Name:             "VALID_NOINIT",
@@ -122,6 +123,13 @@ func TestValid(t *testing.T) {
 			SetTokenExpire:        -1,
 		},
 		{
+			Name:                  "INVALIDLOLOGLEVEL_NOINIT",
+			ExpectedError:         true,
+			ExpectedErrorContains: "bad LogLevel",
+			InitializeConfig:      true,
+			SetLogLevel:           "nope",
+		},
+		{
 			Name:                  "INVALID_INIT",
 			ExpectedError:         true,
 			Init:                  true,
@@ -175,6 +183,8 @@ func TestValid(t *testing.T) {
 				c.CookieName = ""
 			case tc.SetCookieName != "":
 				c.CookieName = tc.SetCookieName
+			case tc.SetLogLevel != "":
+				c.LogLevel = tc.SetLogLevel
 			}
 
 			err := c.Valid(tc.Init)
@@ -187,6 +197,7 @@ func TestValid(t *testing.T) {
 				assert.Len(t, c.JwtSecretKey, 64)
 				assert.NotEmpty(t, c.HtmlFile)
 				assert.NotEmpty(t, c.CookieName)
+				assert.NotEmpty(t, c.LogLevel)
 				assert.GreaterOrEqual(t, c.TokenExpire, time.Duration(1))
 				assert.GreaterOrEqual(t, c.TokenRefresh, time.Duration(1))
 				assert.GreaterOrEqual(t, c.Port, uint(1))
@@ -202,7 +213,7 @@ func TestLoadCommandeLine(t *testing.T) {
 
 	// no flag
 	c.LoadCommandeLine(f)
-	assert.Empty(t, c.Debug)
+	assert.Empty(t, c.LogLevel)
 	assert.Empty(t, c.ConfigurationFile)
 
 	// inexistent flag
@@ -210,25 +221,25 @@ func TestLoadCommandeLine(t *testing.T) {
 		assert.Error(t, err)
 	}
 	c.LoadCommandeLine(f)
-	assert.Empty(t, c.Debug)
+	assert.Empty(t, c.LogLevel)
 	assert.Empty(t, c.ConfigurationFile)
 
 	// debug flag
-	if err := f.Set("debug", "True"); err != nil {
+	if err := f.Set("log", "debug"); err != nil {
 		assert.NoError(t, err)
-		t.FailNow() // panic if no fail
+		t.FailNow() // panic if failed
 	}
 	c.LoadCommandeLine(f)
-	assert.True(t, c.Debug)
+	assert.Equal(t, "debug", c.LogLevel)
 	assert.Empty(t, c.ConfigurationFile)
 
 	// conf flag
 	if err := f.Set("config", "test"); err != nil {
 		assert.NoError(t, err)
-		t.FailNow() // panic if no fail
+		t.FailNow() // panic if failed
 	}
 	c.LoadCommandeLine(f)
-	assert.True(t, c.Debug)
+	assert.Equal(t, "debug", c.LogLevel)
 	assert.Equal(t, []string{"test"}, c.ConfigurationFile)
 }
 
@@ -331,7 +342,7 @@ func TestLoad(t *testing.T) {
 			c := &Config{}
 			k := koanf.New(".")
 			c.LoadCommandeLine(f) // init
-			assert.False(t, c.Debug)
+			assert.Empty(t, c.LogLevel)
 			assert.Empty(t, c.ConfigurationFile)
 
 			f.Set(tc.flagName, tc.flagValue)

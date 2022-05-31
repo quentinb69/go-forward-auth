@@ -4,11 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/csrf"
+	"go.uber.org/zap"
 )
 
 type Context struct {
@@ -40,7 +40,7 @@ func LoadServer() error {
 	r.HandleFunc("/", ShowHomeHandler)
 	r.HandleFunc("/logout", LogoutHandler)
 
-	log.Printf("Loading server on port %d... (TLS connection is set to %t)", configuration.Port, configuration.Tls)
+	log.Info("Loading server...", zap.Uint("port", configuration.Port), zap.Bool("TLS", configuration.Tls))
 
 	// transform PORT from int to string like ":<port>"
 	var port = ":" + fmt.Sprint(configuration.Port)
@@ -63,13 +63,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		Url:            GetHost(r),
 	}
 
-	if configuration.Debug {
-		log.Printf("server: home request for %s\n\t-> %v", ctx.Ip, r)
-	}
-
-	if configuration.Debug {
-		log.Printf("server: home request for %s\n\t-> %v", ctx.Ip, r)
-	}
+	log.Sugar().Debug("server: home requested", zap.String("ip", ctx.Ip), "request", r)
 
 	// get jwt from cookie
 	ctx.UserCookie, _ = r.Cookie(configuration.CookieName)
@@ -88,7 +82,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 				ctx.State = "out"
 			// bad domain (only cookie)
 			case ctx.UserCookie != nil:
-				log.Printf("server: bad domain for %s", ctx.Ip)
+				log.Error("server: bad domain", zap.String("ip", ctx.Ip))
 				ctx.HttpReturnCode = http.StatusForbidden
 				ctx.State = "out"
 				ctx.ErrorMessage = "Restricted Area"
@@ -109,7 +103,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 			ctx.ErrorMessage = "Bad credentials"
 		// data provided ar valid
 		case ctx.User != nil:
-			log.Printf("server: new jwt for %s", ctx.Ip)
+			log.Info("server: new jwt", zap.String("ip", ctx.Ip))
 			ctx.HttpReturnCode = http.StatusFound
 			ctx.State = "in"
 			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
@@ -128,7 +122,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 		switch {
 		// bad user
 		case ctx.User == nil:
-			log.Printf("server: user %s not found", ctx.Claims.Subject)
+			log.Error("server: user not found", zap.String("user", ctx.Claims.Subject))
 			ctx.HttpReturnCode = http.StatusForbidden
 			ctx.State = "out"
 			ctx.GeneratedCookie = &http.Cookie{
@@ -143,7 +137,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 			}
 		// refreshed user
 		case ctx.User != nil:
-			log.Printf("server: renew jwt for %s", ctx.Ip)
+			log.Info("server: renew jwt", zap.String("ip", ctx.Ip))
 			ctx.HttpReturnCode = http.StatusFound
 			ctx.State = "in"
 			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
@@ -166,14 +160,13 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 // remove cookie and redirect to home
 func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
-	if configuration.Debug {
-		log.Printf("server: logout request for %s\n\t-> %v", GetIp(r), r)
-	}
+	ip := GetIp(r)
+	log.Sugar().Debug("server: logout requested", zap.String("ip", ip), "request", r)
 
 	// remove cookie if exists
 	if c, _ := r.Cookie(configuration.CookieName); c != nil {
-		ip := GetIp(r)
-		log.Printf("server: delete jwt for %s", ip)
+		log.Info("server: delete jwt", zap.String("ip", ip))
+
 		http.SetCookie(w, &http.Cookie{
 			Name:     configuration.CookieName,
 			Value:    "",
@@ -198,9 +191,9 @@ func LoadTemplate(w *http.ResponseWriter, ctx *Context) error {
 	if w == nil || ctx == nil {
 		return errors.New("server: responsewriter and context are mandatory")
 	}
-	if configuration.Debug {
-		log.Printf("server: final context for %s\n\t-> %v", ctx.Ip, ctx)
-	}
+
+	log.Sugar().Debug("server: final context", zap.String("ip", ctx.Ip), "context", ctx)
+
 	if ctx.HttpReturnCode < 100 || ctx.HttpReturnCode > 599 {
 		(*w).WriteHeader(http.StatusInternalServerError)
 		return errors.New("server: bad http return code")

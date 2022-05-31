@@ -4,11 +4,11 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
 	flag "github.com/spf13/pflag" // POSIX compliant
+	"go.uber.org/zap"
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
@@ -28,7 +28,7 @@ type Config struct {
 	JwtSecretKey      []byte           `koanf:"JwtSecretKey"`
 	CsrfSecretKey     []byte           `koanf:"CsrfSecretKey"`
 	HashCost          int              `koanf:"HashCost"`
-	Debug             bool             `koanf:"Debug"`
+	LogLevel          string           `koanf:"LogLevel"`
 	Users             map[string]*User `koanf:"Users"`
 	ConfigurationFile []string
 }
@@ -50,35 +50,35 @@ func (c *Config) Valid(init bool) error {
 			return errors.New("config: bad Port")
 		}
 		c.Port = 8080
-		log.Printf("config: setting Port to %v", c.Port)
+		log.Info("config: setting default value", zap.Uint("Port", c.Port))
 	}
 	if c.CookieName == "" {
 		if !init {
 			return errors.New("config: missing CookieName")
 		}
 		c.CookieName = "GFA"
-		log.Printf("config: setting CookieName to %v", c.CookieName)
+		log.Info("config: setting default value", zap.String("Port", c.CookieName))
 	}
 	if c.TokenExpire < 1 {
 		if !init {
 			return errors.New("config: TokenExpire is too small")
 		}
 		c.TokenExpire = 90
-		log.Printf("config: setting TokenExpire to %v", c.TokenExpire)
+		log.Info("config: setting default value", zap.Duration("TokenExpire", c.TokenExpire))
 	}
 	if c.TokenRefresh < 1 {
 		if !init {
 			return errors.New("config: TokenRefresh is too small")
 		}
 		c.TokenRefresh = 2
-		log.Printf("config: setting TokenRefresh to %v", c.TokenRefresh)
+		log.Info("config: setting default value", zap.Duration("TokenRefresh", c.TokenRefresh))
 	}
 	if c.HtmlFile == "" {
 		if !init {
 			return errors.New("config: missing HtmlFile")
 		}
 		c.HtmlFile = defaultHtmlFile
-		log.Printf("config: setting HtmlFile to %v", c.HtmlFile)
+		log.Info("config: setting default value", zap.String("HtmlFile", c.HtmlFile))
 	}
 	if _, err := os.Stat(c.HtmlFile); err != nil {
 		return errors.New("config: html template error\r\t-> " + err.Error())
@@ -87,7 +87,7 @@ func (c *Config) Valid(init bool) error {
 		if !init {
 			return errors.New("config: JwtSecretKey is too small")
 		}
-		log.Printf("config: JwtSecretKey provided is too weak (%d), generating secure one...", len(c.JwtSecretKey))
+		log.Info("config: JwtSecretKey provided is too weak, generating secure one...", zap.Int("length", len(c.JwtSecretKey)))
 		array := GenerateRandomBytes(64)
 		if len(*array) < 64 {
 			return errors.New("config : error generating JwtSecretKey")
@@ -98,12 +98,19 @@ func (c *Config) Valid(init bool) error {
 		if !init {
 			return errors.New("config: CsrfSecretKey must be 32 bytes long")
 		}
-		log.Printf("config: CsrfSecretKey provided is too weak (%d), generating secure one...", len(c.CsrfSecretKey))
+		log.Info("config: CsrfSecretKey provided is too weak, generating secure one...", zap.Int("length", len(c.CsrfSecretKey)))
 		array := GenerateRandomBytes(32)
 		if len(*array) < 32 {
 			return errors.New("config : error generating CsrfSecretKey")
 		}
 		c.CsrfSecretKey = *array
+	}
+	if _, err := zap.ParseAtomicLevel(c.LogLevel); err != nil || c.LogLevel == "" {
+		if !init {
+			return errors.New("config: bad LogLevel")
+		}
+		c.LogLevel = "info"
+		log.Info("config: setting default value", zap.String("LogLevel", c.LogLevel))
 	}
 
 	return nil
@@ -119,12 +126,12 @@ func (c *Config) LoadCommandeLine(f *flag.FlagSet) {
 
 	if !f.HasFlags() {
 		f.StringSlice("config", c.ConfigurationFile, "Link to one or more configurations files.")
-		f.Bool("debug", c.Debug, "Enable some debbug log.")
+		f.String("log", c.LogLevel, "Select log level.")
 	}
 
 	f.Parse(os.Args[1:])
 
-	c.Debug, _ = f.GetBool("debug")
+	c.LogLevel, _ = f.GetString("log")
 	c.ConfigurationFile, _ = f.GetStringSlice("config")
 }
 
@@ -159,7 +166,7 @@ func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 		if !d {
 			return errors.New("config: error loading file\n\t-> " + err.Error())
 		}
-		log.Printf("config: error loading default file\n\t-> " + err.Error())
+		log.Info("config: error loading default file", zap.Error(err))
 	}
 
 	// parse configuration in global configuration var
@@ -168,19 +175,16 @@ func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 	}
 
 	if err := c.Valid(false); err != nil {
-		log.Printf("config: configuration is not valid\n\t-> %v", err)
+		log.Info("config: configuration is not valid", zap.Error(err))
 		if err := c.Valid(true); err != nil {
 			return errors.New("config: default configuration is not valid either\n\t-> " + err.Error())
 		}
 	}
 
-	log.Printf("Configuration loaded from files: %v", c.ConfigurationFile)
+	log.Info("Configuration loaded", zap.Strings("files", c.ConfigurationFile))
 
 	// print configuration values
-	if c.Debug {
-		log.Printf("Configuration read:\n\t-> %v", k)
-		log.Printf("Configuration parsed:\n\t-> %v", c)
-	}
+	log.Sugar().Debug("Configuration done", zap.Any("readed", k.All()), zap.String("loaded", fmt.Sprintf("Config: %+v", c)))
 
 	return nil
 }

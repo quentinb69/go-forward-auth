@@ -1,8 +1,6 @@
 package main
 
-import (
-	"log"
-)
+import "go.uber.org/zap"
 
 type User struct {
 	Username       string
@@ -15,12 +13,12 @@ func GetValidUser(username, password, url string) *User {
 
 	u := GetUser(username)
 	if u == nil {
-		log.Printf("user: %s not found", username)
+		log.Info("user: not found", zap.String("username", username))
 		return nil
 	}
 
 	if !CompareHash(u.Password, password) {
-		log.Printf("user: %s bad password", username)
+		log.Error("user: bad password", zap.String("username", username))
 		return nil
 	}
 
@@ -35,7 +33,7 @@ func GetValidUser(username, password, url string) *User {
 func (u *User) Allowed(url string) (ret bool) {
 	ret = CompareDomains(u.AllowedDomains, url)
 	if !ret {
-		log.Printf("user: %s not allowed domain %s", u.Username, url)
+		log.Error("user: not allowed", zap.String("username", u.Username), zap.String("url", url))
 	}
 	return ret
 }
@@ -43,7 +41,7 @@ func (u *User) Allowed(url string) (ret bool) {
 // find user from configuration
 func GetUser(username string) *User {
 	if configuration.Users == nil || len(configuration.Users) == 0 {
-		log.Print("user: no user configured")
+		log.Info("user: no user configured")
 		return nil
 	}
 

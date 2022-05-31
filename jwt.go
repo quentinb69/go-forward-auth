@@ -4,11 +4,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"go.uber.org/zap"
 )
 
 type Claims struct {
@@ -43,7 +43,7 @@ func CreateJwtCookie(username, ip string, domains []string) *http.Cookie {
 	// uniq id
 	id := GenerateRandomBytes(30)
 	if len(*id) == 0 {
-		log.Println("jwt: failed to generate random bytes")
+		log.Error("jwt: failed to generate random bytes")
 		return nil
 	}
 
@@ -83,7 +83,7 @@ func CreateJwtCookie(username, ip string, domains []string) *http.Cookie {
 func GetValidJwtClaims(c *http.Cookie, ip, url string) (cl *Claims) {
 
 	if c == nil {
-		log.Printf("jwt: no cookie provided for %s", ip)
+		log.Info("jwt: no cookie", zap.String("ip", ip))
 		return nil
 	}
 
@@ -102,12 +102,12 @@ func GetValidJwtClaims(c *http.Cookie, ip, url string) (cl *Claims) {
 
 	// Validate jwt
 	if err != nil || !token.Valid {
-		log.Printf("jwt: invalid claims for %s\n\t-> %v", ip, err.Error())
+		log.Error("jwt: invalid claims", zap.String("ip", ip), zap.Error(err))
 		return nil
 	}
 	// Custom validation
 	if err := ValidateClaims(cl, ip, url); err != nil {
-		log.Printf("jwt: invalid claims for %s\n\t-> %v", ip, err.Error())
+		log.Error("jwt: invalid claims", zap.String("ip", ip), zap.Error(err))
 		return nil
 	}
 
