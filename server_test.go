@@ -98,7 +98,7 @@ func TestToMap(t *testing.T) {
 		// shadow the test case to avoid modifying the test case
 		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
-			t.Parallel()
+			//t.Parallel()
 			if tc.noFormData {
 				ctx.FormData = nil
 			}

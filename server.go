@@ -90,7 +90,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// here form data is provided
+		// from here formdata is provided
 		ctx.User = GetValidUserFromFormData(ctx.FormData, ctx.Url)
 
 		switch {
@@ -113,10 +113,8 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// from here, we have a valid Jwt
-	needRefresh := time.Until(ctx.Claims.ExpiresAt.Time) < (configuration.TokenRefresh * time.Minute)
-
 	// refresh needed
-	if needRefresh {
+	if time.Until(ctx.Claims.ExpiresAt.Time) < (configuration.TokenRefresh * time.Minute) {
 		ctx.User = GetUser(ctx.Claims.Subject)
 		switch {
 		// bad user

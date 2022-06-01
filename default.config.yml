@@ -20,9 +20,6 @@ TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (
 #JwtSecretKey: "my_secret_JWT_key"
 #CsrfSecretKey: "my_secret_CSRF_key"
 
-# number fo bcrypt iterations (default 10) (not used yet)
-#HashCost: 10
-
 # set log level
 #LogLevel: info
 

@@ -209,7 +209,7 @@ func TestValid(t *testing.T) {
 
 func TestLoadCommandeLine(t *testing.T) {
 	c := &Config{}
-	f := flag.NewFlagSet("config", flag.ContinueOnError)
+	f := flag.NewFlagSet("config", flag.ExitOnError)
 
 	// no flag
 	c.LoadCommandeLine(f)
@@ -241,6 +241,16 @@ func TestLoadCommandeLine(t *testing.T) {
 	c.LoadCommandeLine(f)
 	assert.Equal(t, "debug", c.LogLevel)
 	assert.Equal(t, []string{"test"}, c.ConfigurationFile)
+
+	// conf hash
+	if err := f.Set("hash", "pass"); err != nil {
+		assert.NoError(t, err)
+		t.FailNow() // panic if failed
+	}
+	c.LoadCommandeLine(f)
+	assert.Equal(t, "debug", c.LogLevel)
+	assert.Equal(t, []string{"test"}, c.ConfigurationFile)
+	assert.Equal(t, "pass", c.StringToHash)
 }
 
 func TestLoadFile(t *testing.T) {
@@ -331,6 +341,7 @@ func TestLoad(t *testing.T) {
 		expectedErrorContains string
 	}{
 		{"bad_conf", "config", "bad_conf", "error loading file"},
+		{"hash", "hash", "PASSWORD", "not an error"},
 	}
 
 	for _, tc := range testCase {

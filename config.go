@@ -27,10 +27,10 @@ type Config struct {
 	HtmlFile          string           `koanf:"HtmlFile"`
 	JwtSecretKey      []byte           `koanf:"JwtSecretKey"`
 	CsrfSecretKey     []byte           `koanf:"CsrfSecretKey"`
-	HashCost          int              `koanf:"HashCost"`
 	LogLevel          string           `koanf:"LogLevel"`
 	Users             map[string]*User `koanf:"Users"`
 	ConfigurationFile []string
+	StringToHash      string
 }
 
 const defaultConfigurationFile = "default.config.yml"
@@ -127,12 +127,14 @@ func (c *Config) LoadCommandeLine(f *flag.FlagSet) {
 	if !f.HasFlags() {
 		f.StringSlice("config", c.ConfigurationFile, "Link to one or more configurations files.")
 		f.String("log", c.LogLevel, "Select log level.")
+		f.String("hash", c.LogLevel, "Password to hash (if hash is set, program will exit after showing answer).")
 	}
 
 	f.Parse(os.Args[1:])
 
 	c.LogLevel, _ = f.GetString("log")
 	c.ConfigurationFile, _ = f.GetStringSlice("config")
+	c.StringToHash, _ = f.GetString("hash")
 }
 
 // load configuration from file
@@ -161,6 +163,10 @@ func (c *Config) LoadFile(k *koanf.Koanf) (isDefault bool, err error) {
 func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 
 	c.LoadCommandeLine(f)
+	if c.StringToHash != "" {
+		log.Info("config: hashing string", zap.String("result", GetHash(c.StringToHash)))
+		return errors.New("config: not an error")
+	}
 
 	if d, err := c.LoadFile(k); err != nil {
 		if !d {

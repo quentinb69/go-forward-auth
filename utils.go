@@ -50,10 +50,10 @@ func GetHost(r *http.Request) (host string) {
 	return host
 }
 
-// return bcrypted hash of string
+// return bcrypted hash of string, 12 iterations
 // panic in case of error
 func GetHash(s string) string {
-	h, err := bcrypt.GenerateFromPassword([]byte(s), configuration.HashCost)
+	h, err := bcrypt.GenerateFromPassword([]byte(s), 12)
 	if err != nil {
 		panic(err)
 	}
