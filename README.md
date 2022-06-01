@@ -32,7 +32,7 @@ GFA check if the website is allowed for the user (cf. configuration file and Aud
 - ~~automatic test~~
 - ~~automatic lint (gofmt, etc...)~~
 - ~~use CSRF ? (not sure if needed)~~
-- help tool for bcrypt
+- ~~help tool for bcrypt~~
 - real documentation
 - reacto for cleaner code
 

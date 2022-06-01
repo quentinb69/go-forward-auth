@@ -43,7 +43,7 @@ func LoadConfigurationAndLogger() error {
 
 	// init configuration
 	k := koanf.New(".")
-	f := flag.NewFlagSet("config", flag.ContinueOnError)
+	f := flag.NewFlagSet("config", flag.ExitOnError)
 	if configuration == nil {
 		configuration = &Config{}
 	}
