@@ -28,6 +28,7 @@ func TestValid(t *testing.T) {
 		SetTokenRefresh       time.Duration
 		SetTokenExpire        time.Duration
 		SetLogLevel           string
+		SetMagicIp            string
 	}{
 		{
 			Name:             "VALID_NOINIT",
@@ -100,6 +101,13 @@ func TestValid(t *testing.T) {
 			ExpectedErrorContains: "CsrfSecretKey must be 32 bytes long",
 			InitializeConfig:      true,
 			SetCsrfSecretKey:      []byte("123"),
+		},
+		{
+			Name:                  "INVALIDMAGICIP_NOINIT",
+			ExpectedError:         true,
+			ExpectedErrorContains: "MagicIp must be at least 12",
+			InitializeConfig:      true,
+			SetMagicIp:            "123",
 		},
 		{
 			Name:                  "INVALIDCOOKIENAME_NOINIT",
@@ -185,6 +193,8 @@ func TestValid(t *testing.T) {
 				c.CookieName = tc.SetCookieName
 			case tc.SetLogLevel != "":
 				c.LogLevel = tc.SetLogLevel
+			case tc.SetMagicIp != "":
+				c.MagicIp = tc.SetMagicIp
 			}
 
 			err := c.Valid(tc.Init)

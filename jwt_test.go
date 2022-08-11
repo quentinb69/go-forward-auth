@@ -8,6 +8,9 @@ import (
 )
 
 func TestValidateClaims(t *testing.T) {
+	magicIpClaims := *TestClaims
+	magicIpClaims.Ip = configuration.MagicIp
+
 	testCases := []struct {
 		name                  string
 		claims                *Claims
@@ -24,7 +27,9 @@ func TestValidateClaims(t *testing.T) {
 		{"NO_AUD", TestClaims, "1.2.3.4", "", "domain", true, false},
 		{"NO_SUB", &Claims{}, "", "", "username", false, true},
 		{"NO_CLAIMS", nil, "", "", "claims", false, false},
+		{"MAGIC_IP", &magicIpClaims, "9.8.7.6", "url.fr", "", false, false},
 	}
+
 	for _, tc := range testCases {
 		// shadow the test case to avoid modifying the test case
 		tc := tc

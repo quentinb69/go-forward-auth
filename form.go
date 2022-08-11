@@ -11,12 +11,12 @@ import (
 // Parse http request to a FormData struct
 var decoder = schema.NewDecoder()
 
-// Action not used...
 type FormData struct {
 	Password string `schema:"password,required"`
 	Username string `schema:"username,required"`
-	Csrf     string `schema:"csrf"`
-	Action   string `schema:"action"`
+	// anyip is a checkbox, see here : https://github.com/gorilla/schema/issues/1
+	AnyIp bool   `schema:"anyip" sql:"default: false"`
+	Csrf  string `schema:"csrf"`
 }
 
 // Extract FormData from request HEADER

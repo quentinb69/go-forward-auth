@@ -20,6 +20,9 @@ TokenRefresh: 2 # refresh jwt token if user make action in the last XX minutes (
 #JwtSecretKey: "my_secret_JWT_key"
 #CsrfSecretKey: "my_secret_CSRF_key"
 
+# if this MagicIp is in JWT, it won't be tested against client's one
+#MagicIp: "my_magic_ip"
+
 # set log level
 #LogLevel: info
 

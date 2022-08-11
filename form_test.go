@@ -15,14 +15,15 @@ func TestGetFormData(t *testing.T) {
 		expectedPassword string
 		expectedUsername string
 		expectedCsrf     string
-		expectedAction   string
+		expectedAnyIp    bool
 	}{
-		{"NOMINAL", http.Request{Header: http.Header{"Auth-Form": []string{"password=test&username=jacques&csrf=test&action=test"}}}, false, "test", "jacques", "test", "test"},
-		{"NO_USERNAME", http.Request{Header: http.Header{"Auth-Form": []string{"username=paul&csrf=test&action=test"}}}, true, "", "", "", ""},
-		{"NO_PASSWORD", http.Request{Header: http.Header{"Auth-Form": []string{"password=test&csrf=test&action=test"}}}, true, "", "", "", ""},
-		{"NO_OPTIONAL", http.Request{Header: http.Header{"Auth-Form": []string{"username=jean&password=test"}}}, false, "test", "jean", "", ""},
-		{"TOO_MUCH", http.Request{Header: http.Header{"Auth-Form": []string{"username=pierre&password=test&MOAR=TEST"}}}, true, "", "", "", ""},
-		{"BAD_HEADER", http.Request{Header: http.Header{"Bad-Name": []string{"username=pierre&password=test&MOAR=TEST"}}}, true, "", "", "", ""},
+		{"NOMINAL", http.Request{Header: http.Header{"Auth-Form": []string{"password=test&username=jacques&csrf=test"}}}, false, "test", "jacques", "test", false},
+		{"NO_USERNAME", http.Request{Header: http.Header{"Auth-Form": []string{"username=paul&csrf=test"}}}, true, "", "", "", false},
+		{"NO_PASSWORD", http.Request{Header: http.Header{"Auth-Form": []string{"password=test&csrf=test"}}}, true, "", "", "", false},
+		{"NO_OPTIONAL", http.Request{Header: http.Header{"Auth-Form": []string{"username=jean&password=test"}}}, false, "test", "jean", "", false},
+		{"TOO_MUCH", http.Request{Header: http.Header{"Auth-Form": []string{"username=pierre&password=test&MOAR=TEST"}}}, true, "", "", "", false},
+		{"BAD_HEADER", http.Request{Header: http.Header{"Bad-Name": []string{"username=pierre&password=test&MOAR=TEST"}}}, true, "", "", "", false},
+		{"ANY_IP", http.Request{Header: http.Header{"Bad-Name": []string{"username=pierre&password=test&anyip=on&MOAR=TEST"}}}, true, "", "", "", true},
 	}
 	for _, tc := range testCases {
 		// shadow the test case to avoid modifying the test case
@@ -36,7 +37,7 @@ func TestGetFormData(t *testing.T) {
 				assert.Equal(t, tc.expectedPassword, f.Password)
 				assert.Equal(t, tc.expectedUsername, f.Username)
 				assert.Equal(t, tc.expectedCsrf, f.Csrf)
-				assert.Equal(t, tc.expectedAction, f.Action)
+				assert.Equal(t, tc.expectedAnyIp, f.AnyIp)
 			}
 		})
 	}
@@ -66,11 +67,11 @@ func TestGetValidUserFromFormData(t *testing.T) {
 		expectedPassword string
 		expectedDomains  []string
 	}{
-		{"NOMINAL", &FormData{Username: "admin", Password: TestAdminPassword, Csrf: "test", Action: "test"}, "url.com", false, "admin", configuration.Users["admin"].Password, configuration.Users["admin"].AllowedDomains},
-		{"BAD_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test", Action: "test"}, "notallowed.net", true, "", "", nil},
-		{"NO_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test", Action: "test"}, "", true, "", "", nil},
-		{"NO_USERNAME", &FormData{Password: "nope", Csrf: "test", Action: "test"}, "", true, "", "", nil},
-		{"NO_PASSWORD", &FormData{Username: "admin", Csrf: "test", Action: "test"}, "", true, "", "", nil},
+		{"NOMINAL", &FormData{Username: "admin", Password: TestAdminPassword, Csrf: "test"}, "url.com", false, "admin", configuration.Users["admin"].Password, configuration.Users["admin"].AllowedDomains},
+		{"BAD_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test"}, "notallowed.net", true, "", "", nil},
+		{"NO_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test"}, "", true, "", "", nil},
+		{"NO_USERNAME", &FormData{Password: "nope", Csrf: "test"}, "", true, "", "", nil},
+		{"NO_PASSWORD", &FormData{Username: "admin", Csrf: "test"}, "", true, "", "", nil},
 		{"NOT_EXIST", &FormData{Username: "nope", Password: "test"}, "", true, "", "", nil},
 		{"NO_FORMDATA", nil, "", true, "", "", nil},
 	}

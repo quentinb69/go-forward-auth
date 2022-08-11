@@ -25,7 +25,7 @@ func ValidateClaims(c *Claims, ip, url string) (err error) {
 		return errors.New("jwt: missing username or ip or id")
 	}
 	// Check if ip is allowed
-	if ip == "" || c.Ip != ip {
+	if c.Ip != configuration.MagicIp && (ip == "" || c.Ip != ip) {
 		return errors.New("jwt: ip doesn't match")
 	}
 	// Check if domains is allowed

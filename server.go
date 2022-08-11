@@ -84,7 +84,10 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 				log.Error("server: bad token", zap.String("ip", ctx.Ip))
 				ctx.HttpReturnCode = http.StatusForbidden
 				ctx.State = "out"
-				ctx.ErrorMessage = "Restricted Area"
+				// if cookie is not expired, it means the user is trying to access an unauthorized Domain
+				if time.Until(ctx.UserCookie.Expires) > 0 {
+					ctx.ErrorMessage = "Restricted Area"
+				}
 			}
 			log.Info("Loading Template", zap.Int("status", ctx.HttpReturnCode), zap.Error(LoadTemplate(&w, ctx)))
 			return
@@ -100,13 +103,19 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 			ctx.HttpReturnCode = http.StatusUnauthorized
 			ctx.State = "out"
 			ctx.ErrorMessage = "Bad credentials"
-		// data provided ar valid
+		// data provided are valid
 		case ctx.User != nil:
 			log.Info("server: new jwt", zap.String("ip", ctx.Ip))
 			ctx.HttpReturnCode = http.StatusMultipleChoices
 			ctx.State = "in"
-			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, ctx.Ip, ctx.User.AllowedDomains)
 
+			// set MagicIp if user allow connection from anyip
+			claimsIp := ctx.Ip
+			if ctx.FormData.AnyIp {
+				claimsIp = configuration.MagicIp
+			}
+
+			ctx.GeneratedCookie = CreateJwtCookie(ctx.User.Username, claimsIp, ctx.User.AllowedDomains)
 		}
 		log.Info("Loading Template", zap.Int("status", ctx.HttpReturnCode), zap.Error(LoadTemplate(&w, ctx)))
 		return

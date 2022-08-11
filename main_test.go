@@ -28,22 +28,24 @@ var TestClaims = &Claims{
 }
 
 // ---- valid jwt content sample ----
-//{
-//  "alg": "HS256",
-//  "typ": "JWT"
-//}
-//{
-//	"Ip": "1.2.3.4",
-//	"iss": "GFA",
-//	"sub": "jean",
-//	"aud": [
-//	  "url.net"
-//	],
-//	"exp": 1653745215,
-//	"nbf": 1653739815,
-//	"iat": 1653739815,
-//	"jti": "m8J8NW2xgj80nx8GcDKww0ng47F8vMY1bNk-s-J5"
-//}
+//
+//	{
+//	 "alg": "HS256",
+//	 "typ": "JWT"
+//	}
+//
+//	{
+//		"Ip": "1.2.3.4",
+//		"iss": "GFA",
+//		"sub": "jean",
+//		"aud": [
+//		  "url.net"
+//		],
+//		"exp": 1653745215,
+//		"nbf": 1653739815,
+//		"iat": 1653739815,
+//		"jti": "m8J8NW2xgj80nx8GcDKww0ng47F8vMY1bNk-s-J5"
+//	}
 var TestCookie = map[string]*http.Cookie{
 	"valid":   {Name: "_test_gfa", Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJcCI6IjEuMi4zLjQiLCJpc3MiOiJHRkEiLCJzdWIiOiJqZWFuIiwiYXVkIjpbInVybC5uZXQiXSwiZXhwIjo5OTk5OTk5OTk5LCJuYmYiOjEsImlhdCI6MSwianRpIjoibThKOE5XMnhnajgwbng4R2NES3d3MG5nNDdGOHZNWTFiTmstcy1KNSJ9.YYXMg9ag7L2N_xSBZ-a0CY7fulmGCWFUaBZLUgNgeqQ"},
 	"expired": {Name: "_test_gfa", Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJJcCI6IjEuMi4zLjQiLCJpc3MiOiJHRkEiLCJzdWIiOiJqZWFuIiwiYXVkIjpbInVybC5uZXQiXSwiZXhwIjoyLCJuYmYiOjEsImlhdCI6MSwianRpIjoibThKOE5XMnhnajgwbng4R2NES3d3MG5nNDdGOHZNWTFiTmstcy1KNSJ9.WRGDh08Kr_dMj7CqaXIoflFH6jYH7lN7SFp4gOlSm3U"},

@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"os"
@@ -28,6 +29,7 @@ type Config struct {
 	JwtSecretKey      []byte           `koanf:"JwtSecretKey"`
 	CsrfSecretKey     []byte           `koanf:"CsrfSecretKey"`
 	LogLevel          string           `koanf:"LogLevel"`
+	MagicIp           string           `koanf:"MagicIp"`
 	Users             map[string]*User `koanf:"Users"`
 	ConfigurationFile []string
 	StringToHash      string
@@ -104,6 +106,18 @@ func (c *Config) Valid(init bool) error {
 			return errors.New("config : error generating CsrfSecretKey")
 		}
 		c.CsrfSecretKey = *array
+	}
+	if len(c.MagicIp) < 12 {
+		if !init {
+			return errors.New("config: MagicIp must be at least 12 character long")
+		}
+		log.Info("config: MagicIp provided is too weak, generating secure one...", zap.Int("length", len(c.MagicIp)))
+		array := GenerateRandomBytes(12)
+		if len(*array) < 12 {
+			return errors.New("config : error generating MagicIp")
+		}
+		// magic ip need to be passed to jwt
+		c.MagicIp = base64.StdEncoding.EncodeToString(*array)
 	}
 	if _, err := zap.ParseAtomicLevel(c.LogLevel); err != nil || c.LogLevel == "" {
 		if !init {

@@ -26,11 +26,11 @@ body {
 .form {
     width: 100%;
     max-width: 400px;
-    padding: 4rem 2rem;
+    padding: 4em 2em;
     margin: auto;
     height: fit-content;
     background: #222;
-    border-radius: 1rem;
+    border-radius: 1em;
 }
 
 .form-input:focus {
@@ -40,28 +40,37 @@ body {
 .form-input {
     color: #fff;
     background-color: #000;
-    padding: 0.5rem;
+    padding: 0.5em;
     border: 0;
     display: block;
-    margin: 1.2rem auto;
+    margin: 1em auto;
     width: 80%;
 }
 
 .form-btn {
     width: 80%;
-    margin: 1rem 0 0 0;
+    margin: 2em 0 0 0;
 }
 
 .form-title {
-    margin: 0 0 3rem 0;
+    margin: 0 0 2em 0;
+}
+
+.form-check-label {
+  color: #888;
+  font-style: italic;
+}
+
+.form-check-input {
+  background-color: #888;
 }
 
 .error {
     background-color: #dc3545;
     text-align: center;
-    border-radius: 1rem;
+    border-radius: 1em;
     width: 75%;
-    margin: 0.3rem auto;
+    margin: 0.3em auto;
 }
 
 .footer {
@@ -71,7 +80,6 @@ body {
 ::placeholder {
     color: #fff;
 }
-
 </style>
 </head>
 
@@ -84,7 +92,9 @@ body {
 	
 	<input type="text" autocomplete="username" autocapitalize="none" class="form-input" name="username" placeholder="Username" id="username" autofocus>
 	<input type="password" autocomplete="current-password" autocapitalize="none" class="form-input" name="password" id="password" placeholder="Password">
-        
+  <input class="form-check-input" type="checkbox" id="anyip" name="anyip" checked="false">
+  <label class="form-check-label" for="anyip">Stay connected from anywhere</label>
+
 	<button class="btn btn-primary form-btn" type="submit">Login</button>
 
 {{ else }}
@@ -93,14 +103,13 @@ body {
 
 	<a href="/logout" class="btn btn-primary">Logout</a>
 {{ end }}
-<input type="hidden" name=action value="todo">
 <input type="hidden" name=csrf value="{{ .csrf }}">
 </form>
 </main>
 
 <footer class="footer mt-auto py-3 bg-tranparent text-end">
 	<div class="container">
-	<span class="text-muted">Your are : {{ .ip }}</span>
+	<span class="text-muted">You are : {{ .ip }}</span>
 	</div>
 </footer>
 </body>
@@ -109,6 +118,7 @@ body {
 <script>
   const form = document.getElementById("form");
   const error = document.getElementById("error");
+  document.getElementById("anyip").checked = false;
   // sent Form via XHR to send data via Header 
   form.addEventListener("submit", (e) => {
     const formData = new FormData(form);

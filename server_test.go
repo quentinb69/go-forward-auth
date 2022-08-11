@@ -268,8 +268,8 @@ func TestShowHomeHandler(t *testing.T) {
 		SameSite: http.SameSiteLaxMode,
 	}
 
-	good_header := &http.Header{"Auth-Form": []string{"password=pass&username=admin&csrf=test&action=test"}}
-	bad_header := &http.Header{"Auth-Form": []string{"password=test&username=jacques&csrf=test&action=test"}}
+	good_header := &http.Header{"Auth-Form": []string{"password=pass&username=admin&csrf=test"}}
+	bad_header := &http.Header{"Auth-Form": []string{"password=test&username=jacques&csrf=test"}}
 
 	testCases := []struct {
 		name                  string
