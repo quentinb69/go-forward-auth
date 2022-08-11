@@ -119,9 +119,9 @@ func TestValid(t *testing.T) {
 		{
 			Name:                  "INVALIDTOKENREFRESH_NOINIT",
 			ExpectedError:         true,
-			ExpectedErrorContains: "TokenRefresh is too small",
+			ExpectedErrorContains: "TokenRefresh must be smaller than TokenExpire",
 			InitializeConfig:      true,
-			SetTokenRefresh:       -1,
+			SetTokenRefresh:       99999999,
 		},
 		{
 			Name:                  "INVALIDTOKENEXPIRE_NOINIT",
@@ -209,7 +209,7 @@ func TestValid(t *testing.T) {
 				assert.NotEmpty(t, c.CookieName)
 				assert.NotEmpty(t, c.LogLevel)
 				assert.GreaterOrEqual(t, c.TokenExpire, time.Duration(1))
-				assert.GreaterOrEqual(t, c.TokenRefresh, time.Duration(1))
+				assert.LessOrEqual(t, c.TokenRefresh, c.TokenExpire)
 				assert.GreaterOrEqual(t, c.Port, uint(1))
 				assert.LessOrEqual(t, c.Port, uint(65534))
 			}

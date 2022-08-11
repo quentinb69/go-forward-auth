@@ -68,11 +68,11 @@ func (c *Config) Valid(init bool) error {
 		c.TokenExpire = 90
 		log.Info("config: setting default value", zap.Duration("TokenExpire", c.TokenExpire))
 	}
-	if c.TokenRefresh < 1 {
+	if c.TokenRefresh >= c.TokenExpire {
 		if !init {
-			return errors.New("config: TokenRefresh is too small")
+			return errors.New("config: TokenRefresh must be smaller than TokenExpire")
 		}
-		c.TokenRefresh = 2
+		c.TokenRefresh = c.TokenExpire / 2
 		log.Info("config: setting default value", zap.Duration("TokenRefresh", c.TokenRefresh))
 	}
 	if c.HtmlFile == "" {
