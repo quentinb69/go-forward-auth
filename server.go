@@ -84,9 +84,9 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 				log.Error("server: bad token", zap.String("ip", ctx.Ip))
 				ctx.HttpReturnCode = http.StatusForbidden
 				ctx.State = "out"
-				// if cookie is not expired, it means the user is trying to access an unauthorized Domain
-				if time.Until(ctx.UserCookie.Expires) > 0 {
-					ctx.ErrorMessage = "Restricted Area"
+				// if cookie is still valid, it means the user is trying to access an unauthorized Domain
+				if err := ctx.UserCookie.Valid(); err == nil {
+					ctx.ErrorMessage = "Unauthorized access"
 				}
 			}
 			log.Info("Loading Template", zap.Int("status", ctx.HttpReturnCode), zap.Error(LoadTemplate(&w, ctx)))
