@@ -171,6 +171,7 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if c, _ := r.Cookie(configuration.CookieName); c != nil {
 		log.Info("server: delete jwt", zap.String("ip", ip))
 
+		// deepcode ignore WebCookieMissesCallToSecure: Secure based on configuration.tls (if no TLS then not secured)
 		http.SetCookie(w, &http.Cookie{
 			Name:     configuration.CookieName,
 			Value:    "",

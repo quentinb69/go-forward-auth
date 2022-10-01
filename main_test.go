@@ -11,6 +11,7 @@ import (
 )
 
 // Crypted password
+// deepcode ignore HardcodedPassword/test: it's a test file
 const TestAdminPassword = "pass"
 const TestJeanPassword = "pwd"
 

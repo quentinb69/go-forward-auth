@@ -70,8 +70,10 @@ func TestGetValidUserFromFormData(t *testing.T) {
 		{"NOMINAL", &FormData{Username: "admin", Password: TestAdminPassword, Csrf: "test"}, "url.com", false, "admin", configuration.Users["admin"].Password, configuration.Users["admin"].AllowedDomains},
 		{"BAD_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test"}, "notallowed.net", true, "", "", nil},
 		{"NO_URL", &FormData{Username: "jean", Password: TestJeanPassword, Csrf: "test"}, "", true, "", "", nil},
+		// deepcode ignore HardcodedPassword/test: it's a test file
 		{"NO_USERNAME", &FormData{Password: "nope", Csrf: "test"}, "", true, "", "", nil},
 		{"NO_PASSWORD", &FormData{Username: "admin", Csrf: "test"}, "", true, "", "", nil},
+		// deepcode ignore HardcodedPassword/test: it's a test file
 		{"NOT_EXIST", &FormData{Username: "nope", Password: "test"}, "", true, "", "", nil},
 		{"NO_FORMDATA", nil, "", true, "", "", nil},
 	}

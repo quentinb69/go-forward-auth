@@ -2,3 +2,4 @@ go-forward-auth
 *.exe
 .vscode
 coverage.out
+.dccache
