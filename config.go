@@ -26,8 +26,8 @@ type Config struct {
 	TokenExpire       time.Duration    `koanf:"TokenExpire"`
 	TokenRefresh      time.Duration    `koanf:"TokenRefresh"`
 	HtmlFile          string           `koanf:"HtmlFile"`
-	JwtSecretKey      []byte           `koanf:"JwtSecretKey"`
-	CsrfSecretKey     []byte           `koanf:"CsrfSecretKey"`
+	JwtSecretKey      string           `koanf:"JwtSecretKey"`
+	CsrfSecretKey     string           `koanf:"CsrfSecretKey"`
 	LogLevel          string           `koanf:"LogLevel"`
 	MagicIp           string           `koanf:"MagicIp"`
 	Users             map[string]*User `koanf:"Users"`
@@ -94,22 +94,22 @@ func (c *Config) Valid(init bool) error {
 		if len(*array) < 64 {
 			return errors.New("config : error generating JwtSecretKey")
 		}
-		c.JwtSecretKey = *array
+		c.JwtSecretKey = string(*array)
 	}
 	if len(c.CsrfSecretKey) != 32 {
 		if !init {
-			return errors.New("config: CsrfSecretKey must be 32 bytes long")
+			return errors.New("config: CsrfSecretKey must be 32 character long")
 		}
 		log.Info("config: CsrfSecretKey provided is too weak, generating secure one...", zap.Int("length", len(c.CsrfSecretKey)))
 		array := GenerateRandomBytes(32)
 		if len(*array) < 32 {
 			return errors.New("config : error generating CsrfSecretKey")
 		}
-		c.CsrfSecretKey = *array
+		c.CsrfSecretKey = string(*array)
 	}
 	if len(c.MagicIp) < 12 {
 		if !init {
-			return errors.New("config: MagicIp must be at least 12 character long")
+			return errors.New("config: MagicIp is too small")
 		}
 		log.Info("config: MagicIp provided is too weak, generating secure one...", zap.Int("length", len(c.MagicIp)))
 		array := GenerateRandomBytes(12)

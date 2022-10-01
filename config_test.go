@@ -22,8 +22,8 @@ func TestValid(t *testing.T) {
 		SetCert               string
 		SetHtmlFile           string
 		SetBadPort            uint
-		SetJwtSecretKey       []byte
-		SetCsrfSecretKey      []byte
+		SetJwtSecretKey       string
+		SetCsrfSecretKey      string
 		SetCookieName         string
 		SetTokenRefresh       time.Duration
 		SetTokenExpire        time.Duration
@@ -93,19 +93,19 @@ func TestValid(t *testing.T) {
 			ExpectedError:         true,
 			ExpectedErrorContains: "JwtSecretKey is too small",
 			InitializeConfig:      true,
-			SetJwtSecretKey:       []byte("123"),
+			SetJwtSecretKey:       "123",
 		},
 		{
 			Name:                  "INVALIDCsrfSecretKey_NOINIT",
 			ExpectedError:         true,
-			ExpectedErrorContains: "CsrfSecretKey must be 32 bytes long",
+			ExpectedErrorContains: "CsrfSecretKey must be 32",
 			InitializeConfig:      true,
-			SetCsrfSecretKey:      []byte("123"),
+			SetCsrfSecretKey:      "123",
 		},
 		{
 			Name:                  "INVALIDMAGICIP_NOINIT",
 			ExpectedError:         true,
-			ExpectedErrorContains: "MagicIp must be at least 12",
+			ExpectedErrorContains: "MagicIp is too small",
 			InitializeConfig:      true,
 			SetMagicIp:            "123",
 		},

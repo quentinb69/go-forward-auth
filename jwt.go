@@ -97,7 +97,7 @@ func GetValidJwtClaims(c *http.Cookie, ip, url string) (cl *Claims) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
-		return configuration.JwtSecretKey, nil
+		return []byte(configuration.JwtSecretKey), nil
 	})
 
 	// Validate jwt

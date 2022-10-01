@@ -241,7 +241,7 @@ func TestShowHomeHandler(t *testing.T) {
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, cl)
-	tokenString, _ := token.SignedString(configuration.JwtSecretKey)
+	tokenString, _ := token.SignedString([]byte(configuration.JwtSecretKey))
 	refreshCookieOk := &http.Cookie{
 		Name:     configuration.CookieName,
 		Value:    tokenString,
@@ -256,7 +256,7 @@ func TestShowHomeHandler(t *testing.T) {
 	// BAD USER
 	cl.Subject = "bad_user"
 	token = jwt.NewWithClaims(jwt.SigningMethodHS256, cl)
-	tokenString, _ = token.SignedString(configuration.JwtSecretKey)
+	tokenString, _ = token.SignedString([]byte(configuration.JwtSecretKey))
 	refreshCookieBadUser := &http.Cookie{
 		Name:     configuration.CookieName,
 		Value:    tokenString,
