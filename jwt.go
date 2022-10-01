@@ -64,7 +64,7 @@ func CreateJwtCookie(username, ip string, domains []string) *http.Cookie {
 
 	// create jwt token and sign it
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, cl)
-	tokenString, _ := token.SignedString(configuration.JwtSecretKey)
+	tokenString, _ := token.SignedString([]byte(configuration.JwtSecretKey))
 	// return Cookie
 	return &http.Cookie{
 		Name:     configuration.CookieName,

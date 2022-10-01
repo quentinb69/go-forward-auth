@@ -81,7 +81,7 @@ func TestGetValidJwtClaims(t *testing.T) {
 	// Helper to create valid cookie
 	//c := CreateJwtCookie("jean", "1.2.3.4", []string{"url.net"})
 	//t.Errorf("JwtToken: %+v", c.Value)
-	//t.Errorf("JwtSecret: %+v", string(configuration.JwtSecretKey))
+	//t.Errorf("JwtSecret: %+v", string([]byte(configuration.JwtSecretKey)))
 
 	testCases := []struct {
 		name        string
