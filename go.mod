@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/schema v1.2.0
 	github.com/knadh/koanf v1.4.3
 	github.com/stretchr/testify v1.8.0
-	golang.org/x/crypto v0.0.0-20220926161630-eccd6366d1be
+	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a
 )
 
 require (
@@ -19,7 +19,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/fsnotify/fsnotify v1.5.4 // indirect
+	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gorilla/csrf v1.7.1
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
@@ -27,6 +27,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.23.0
-	golang.org/x/sys v0.0.0-20220928140112-f11e5e49a4ec // indirect
+	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
