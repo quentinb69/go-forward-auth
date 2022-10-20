@@ -8,6 +8,8 @@ RUN go build -o /go-forward-auth
 
 FROM alpine
 
+LABEL maintainer "quentinb69"
+
 RUN apk update \
 	&& apk upgrade --no-cache \
 	&& apk add --no-cache openssl 

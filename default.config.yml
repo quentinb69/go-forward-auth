@@ -1,6 +1,6 @@
 ---
 # Listen port
-Port: 443
+Port: 8443
 
 # HTTPS settings (Tls to false means HTTP)
 Tls: true
