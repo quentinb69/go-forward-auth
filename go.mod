@@ -6,8 +6,8 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gorilla/schema v1.2.0
 	github.com/knadh/koanf v1.4.4
-	github.com/stretchr/testify v1.8.0
-	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a
+	github.com/stretchr/testify v1.8.1
+	golang.org/x/crypto v0.1.0
 )
 
 require (
@@ -27,6 +27,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.23.0
-	golang.org/x/sys v0.0.0-20221013171732-95e765b1cc43 // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
