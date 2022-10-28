@@ -44,14 +44,16 @@ func (c *Config) Valid(init bool) error {
 	if c.Tls {
 		_, err := tls.LoadX509KeyPair(c.Certificate, c.PrivateKey)
 		if err != nil {
-			return errors.New("config: bad key pair\r\t-> " + err.Error())
+			log.Warn("config: bad key pair", zap.Error(err))
+			log.Warn("config: disabling TLS")
+			c.Tls = false
 		}
 	}
 	if c.Port < 1 || c.Port > 65534 {
 		if !init {
 			return errors.New("config: bad Port")
 		}
-		c.Port = 8080
+		c.Port = 8000
 		log.Info("config: setting default value", zap.Uint("Port", c.Port))
 	}
 	if c.CookieName == "" {
@@ -141,7 +143,7 @@ func (c *Config) LoadCommandeLine(f *flag.FlagSet) {
 	if !f.HasFlags() {
 		f.StringSlice("config", c.ConfigurationFile, "Link to one or more configurations files.")
 		f.String("log", c.LogLevel, "Select log level.")
-		f.String("hash", c.LogLevel, "Password to hash (if hash is set, program will exit after showing answer).")
+		f.String("hash", c.StringToHash, "Password to hash (if hash is set, program will exit after showing answer).")
 	}
 
 	f.Parse(os.Args[1:])
@@ -178,7 +180,8 @@ func (c *Config) Load(k *koanf.Koanf, f *flag.FlagSet) (err error) {
 
 	c.LoadCommandeLine(f)
 	if c.StringToHash != "" {
-		log.Info("config: hashing string", zap.String("result", GetHash(c.StringToHash)))
+		log.Debug("config: hashing string", zap.String("value", c.StringToHash))
+		log.Info("config: hashed string", zap.String("value", GetHash(c.StringToHash)))
 		return errors.New("config: not an error")
 	}
 

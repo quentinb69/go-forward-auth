@@ -354,3 +354,15 @@ func TestShowHomeHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestHealthHandler(t *testing.T) {
+	// make request
+	req := httptest.NewRequest("GET", "/health", nil)
+	w := httptest.NewRecorder()
+	http.HandlerFunc(HealthHandler)(w, req)
+	resp := w.Result()
+	body, _ := io.ReadAll(resp.Body)
+
+	assert.Contains(t, string(body), "OK")
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}

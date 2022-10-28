@@ -39,16 +39,22 @@ func LoadServer() error {
 	r := http.NewServeMux()
 	r.HandleFunc("/", ShowHomeHandler)
 	r.HandleFunc("/logout", LogoutHandler)
+	r.HandleFunc("/health", HealthHandler)
 
 	log.Info("Loading server...", zap.Uint("port", configuration.Port), zap.Bool("TLS", configuration.Tls))
 
 	// transform PORT from int to string like ":<port>"
 	var port = ":" + fmt.Sprint(configuration.Port)
-	if !configuration.Tls {
-		return http.ListenAndServe(port, CSRF(r))
-	} else {
+	if configuration.Tls {
 		return http.ListenAndServeTLS(port, configuration.Certificate, configuration.PrivateKey, CSRF(r))
 	}
+	return http.ListenAndServe(port, CSRF(r))
+}
+
+// health handler
+func HealthHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte("OK"))
+	return
 }
 
 // default handler

@@ -1,8 +1,9 @@
 ---
 # Listen port
-Port: 8443
+#Port: 8000
 
 # HTTPS settings (Tls to false means HTTP)
+# Setting TLS=true with a bad cert/key pair will downgrade server to TLS=false
 Tls: true
 PrivateKey: /opt/gfa/ssl/server.key
 Certificate: /opt/gfa/ssl/server.crt

@@ -58,14 +58,14 @@ func TestValid(t *testing.T) {
 		},
 		{
 			Name:                  "INVALIDTLS_NOINIT",
-			ExpectedError:         true,
+			ExpectedError:         false,
 			ExpectedErrorContains: "bad key pair",
 			InitializeConfig:      true,
 			SetTls:                true,
 		},
 		{
 			Name:                  "INVALIDMISSINGCERT_NOINIT",
-			ExpectedError:         true,
+			ExpectedError:         false,
 			ExpectedErrorContains: "bad key pair",
 			InitializeConfig:      true,
 			SetTls:                true,
@@ -73,7 +73,7 @@ func TestValid(t *testing.T) {
 		},
 		{
 			Name:                  "INVALIDMISSINGPK_NOINIT",
-			ExpectedError:         true,
+			ExpectedError:         false,
 			ExpectedErrorContains: "bad key pair",
 			InitializeConfig:      true,
 			SetTls:                true,
@@ -81,7 +81,7 @@ func TestValid(t *testing.T) {
 		},
 		{
 			Name:                  "INVALIDKEYPAIR_NOINIT",
-			ExpectedError:         true,
+			ExpectedError:         false,
 			ExpectedErrorContains: "bad key pair",
 			InitializeConfig:      true,
 			SetTls:                true,
@@ -136,14 +136,6 @@ func TestValid(t *testing.T) {
 			ExpectedErrorContains: "bad LogLevel",
 			InitializeConfig:      true,
 			SetLogLevel:           "nope",
-		},
-		{
-			Name:                  "INVALID_INIT",
-			ExpectedError:         true,
-			Init:                  true,
-			ExpectedErrorContains: "bad key pair",
-			InitializeConfig:      true,
-			SetTls:                true,
 		},
 		{
 			Name:             "VALID_INIT",

@@ -74,7 +74,7 @@ func TestLoadConfiguration(t *testing.T) {
 	log = nil
 	assert.Nil(t, configuration)
 	assert.Nil(t, log)
-	assert.Error(t, LoadConfigurationAndLogger())
+	assert.NoError(t, LoadConfigurationAndLogger())
 	configuration.ConfigurationFile = []string{"test.config.yml"}
 	assert.NoError(t, LoadConfigurationAndLogger())
 	assert.NotNil(t, configuration)
