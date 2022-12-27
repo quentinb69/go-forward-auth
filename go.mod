@@ -3,7 +3,7 @@ module github.com/quentinb69/go-forward-auth
 go 1.19
 
 require (
-	github.com/golang-jwt/jwt/v4 v4.4.2
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/gorilla/schema v1.2.0
 	github.com/knadh/koanf v1.4.4
 	github.com/stretchr/testify v1.8.1
