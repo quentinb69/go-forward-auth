@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/knadh/koanf"
+	"github.com/knadh/koanf/v2"
 	flag "github.com/spf13/pflag"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

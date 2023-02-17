@@ -11,9 +11,9 @@ import (
 	flag "github.com/spf13/pflag" // POSIX compliant
 	"go.uber.org/zap"
 
-	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/v2"
 )
 
 type Config struct {

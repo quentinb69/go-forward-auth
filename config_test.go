@@ -6,7 +6,7 @@ import (
 
 	flag "github.com/spf13/pflag" // POSIX compliant
 
-	"github.com/knadh/koanf"
+	"github.com/knadh/koanf/v2"
 	"github.com/stretchr/testify/assert"
 )
 

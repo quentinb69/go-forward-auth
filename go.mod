@@ -1,26 +1,30 @@
 module github.com/quentinb69/go-forward-auth
 
-go 1.19
+go 1.20
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/gorilla/schema v1.2.0
-	github.com/knadh/koanf v1.5.0
+	github.com/knadh/koanf/v2 v2.0.0
 	github.com/stretchr/testify v1.8.1
 	golang.org/x/crypto v0.6.0
 )
 
 require (
 	github.com/gorilla/securecookie v1.1.1 // indirect
+	github.com/knadh/koanf/maps v0.1.1 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 )
 
 require (
+	github.com/ajg/form v1.5.1
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gorilla/csrf v1.7.1
+	github.com/knadh/koanf/parsers/yaml v0.1.0
+	github.com/knadh/koanf/providers/file v0.1.0
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
