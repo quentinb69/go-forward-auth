@@ -3,3 +3,5 @@ go-forward-auth
 .vscode
 coverage.out
 .dccache
+*.key
+*.crt

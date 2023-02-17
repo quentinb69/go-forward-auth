@@ -12,15 +12,13 @@ LABEL maintainer "quentinb69"
 
 RUN apk update \
 	&& apk upgrade --no-cache \
-	&& apk add --no-cache openssl curl
+	&& apk add --no-cache curl
 
 WORKDIR /opt/gfa
 COPY --from=builder /go-forward-auth ./gfa
 COPY default.config.yml ./
 COPY default.index.html ./
-COPY entrypoint.sh /usr/local/bin
 
-RUN chmod a+x /usr/local/bin/entrypoint.sh
 RUN adduser -D gfa && chown -R gfa:gfa .
 
 USER gfa:gfa
@@ -28,5 +26,4 @@ USER gfa:gfa
 HEALTHCHECK --timeout=2s --start-period=5s \
 	CMD curl -k https://localhost:8000/health
 
-ENTRYPOINT [ "entrypoint.sh" ]
-
+CMD [ "/opt/gfa/gfa" ]

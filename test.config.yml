@@ -1,6 +1,5 @@
 ---
 Port: 9999
-Tls: false
 CookieDomain: "test_domain"
 CookieName: "_test_gfa"
 TokenExpire: 90

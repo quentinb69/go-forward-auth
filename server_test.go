@@ -17,9 +17,10 @@ func TestLoadServer(t *testing.T) {
 	backup := configuration
 	defer func() { configuration = backup }()
 	configuration.Port = 999999
-	configuration.Tls = false
+	configuration.PrivateKey = "BAD KEY"
 	assert.Error(t, LoadServer())
-	configuration.Tls = true
+	// autogenerate key
+	configuration.PrivateKey = ""
 	assert.Error(t, LoadServer())
 }
 
@@ -248,7 +249,7 @@ func TestShowHomeHandler(t *testing.T) {
 		Expires:  cl.ExpiresAt.Time,
 		Domain:   configuration.CookieDomain,
 		MaxAge:   int(configuration.TokenExpire * time.Minute),
-		Secure:   configuration.Tls,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	}
@@ -263,7 +264,7 @@ func TestShowHomeHandler(t *testing.T) {
 		Expires:  cl.ExpiresAt.Time,
 		Domain:   configuration.CookieDomain,
 		MaxAge:   int(configuration.TokenExpire * time.Minute),
-		Secure:   configuration.Tls,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	}

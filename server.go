@@ -30,7 +30,7 @@ func LoadServer() error {
 
 	CSRF := csrf.Protect(
 		[]byte(configuration.CsrfSecretKey),
-		csrf.Secure(configuration.Tls),
+		csrf.Secure(true),
 		csrf.Path("/"),
 		csrf.CookieName(configuration.CookieName+"_csrf"),
 		csrf.Domain(configuration.CookieDomain),
@@ -41,20 +41,16 @@ func LoadServer() error {
 	r.HandleFunc("/logout", LogoutHandler)
 	r.HandleFunc("/health", HealthHandler)
 
-	log.Info("Loading server...", zap.Uint("port", configuration.Port), zap.Bool("TLS", configuration.Tls))
+	log.Info("Loading server...", zap.Uint("port", configuration.Port))
 
 	// transform PORT from int to string like ":<port>"
 	var port = ":" + fmt.Sprint(configuration.Port)
-	if configuration.Tls {
-		return http.ListenAndServeTLS(port, configuration.Certificate, configuration.PrivateKey, CSRF(r))
-	}
-	return http.ListenAndServe(port, CSRF(r))
+	return http.ListenAndServeTLS(port, configuration.Certificate, configuration.PrivateKey, CSRF(r))
 }
 
 // health handler
 func HealthHandler(w http.ResponseWriter, _ *http.Request) {
 	w.Write([]byte("OK"))
-	return
 }
 
 // default handler
@@ -143,7 +139,7 @@ func ShowHomeHandler(w http.ResponseWriter, r *http.Request) {
 				Expires:  time.Now(),
 				Domain:   configuration.CookieDomain,
 				MaxAge:   -1,
-				Secure:   configuration.Tls,
+				Secure:   true,
 				HttpOnly: true,
 				SameSite: http.SameSiteLaxMode,
 			}
@@ -177,14 +173,13 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if c, _ := r.Cookie(configuration.CookieName); c != nil {
 		log.Info("server: delete jwt", zap.String("ip", ip))
 
-		// deepcode ignore WebCookieMissesCallToSecure: Secure based on configuration.tls (if no TLS then not secured)
 		http.SetCookie(w, &http.Cookie{
 			Name:     configuration.CookieName,
 			Value:    "",
 			Expires:  time.Now(),
 			Domain:   configuration.CookieDomain,
 			MaxAge:   -1,
-			Secure:   configuration.Tls,
+			Secure:   true,
 			HttpOnly: true,
 			SameSite: http.SameSiteLaxMode,
 		})

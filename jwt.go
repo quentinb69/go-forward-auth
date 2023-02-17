@@ -72,7 +72,7 @@ func CreateJwtCookie(username, ip string, domains []string) *http.Cookie {
 		Expires:  cl.ExpiresAt.Time,
 		Domain:   configuration.CookieDomain,
 		MaxAge:   int(configuration.TokenExpire) * 60,
-		Secure:   configuration.Tls,
+		Secure:   true,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	}

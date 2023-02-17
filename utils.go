@@ -1,11 +1,19 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"html"
+	"math/big"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -105,4 +113,48 @@ func CompareDomains(domains []string, url string) bool {
 		}
 	}
 	return false
+}
+
+// generate private and public keys, return if file exists, panic if impossible to finish
+func GenerateKeyPair(keySize int, privateKeyFile string, certificateFile string) {
+	if _, err := os.Stat(privateKeyFile); err == nil {
+		return
+	}
+	if _, err := os.Stat(certificateFile); err == nil {
+		return
+	}
+
+	priv, err := rsa.GenerateKey(rand.Reader, keySize)
+	if err != nil {
+		panic(err)
+	}
+	template := x509.Certificate{
+		SerialNumber: big.NewInt(1),
+		Subject: pkix.Name{
+			Organization: []string{"GFA"},
+		},
+		NotBefore: time.Now(),
+		NotAfter:  time.Now().Add(time.Hour * 24 * 180),
+
+		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &(priv).PublicKey, priv)
+	if err != nil {
+		panic(err)
+	}
+	out := &bytes.Buffer{}
+	pem.Encode(out, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	err = os.WriteFile(certificateFile, out.Bytes(), 0400)
+	if err != nil {
+		panic(err)
+	}
+
+	out.Reset()
+	pem.Encode(out, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: x509.MarshalPKCS1PrivateKey(priv)})
+	err = os.WriteFile(privateKeyFile, out.Bytes(), 0400)
+	if err != nil {
+		panic(err)
+	}
 }

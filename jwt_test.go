@@ -70,7 +70,7 @@ func TestCreateJwtCookie(t *testing.T) {
 			assert.NotNil(t, cookie)
 			assert.Equal(t, configuration.CookieName, cookie.Name)
 			assert.Equal(t, configuration.CookieDomain, cookie.Domain)
-			assert.Equal(t, configuration.Tls, cookie.Secure)
+			assert.Equal(t, true, cookie.Secure)
 			assert.Equal(t, true, cookie.HttpOnly)
 		})
 	}

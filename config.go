@@ -17,7 +17,6 @@ import (
 )
 
 type Config struct {
-	Tls               bool             `koanf:"Tls"`
 	PrivateKey        string           `koanf:"PrivateKey"`
 	Certificate       string           `koanf:"Certificate"`
 	Port              uint             `koanf:"Port"`
@@ -41,13 +40,14 @@ const defaultHtmlFile = "default.index.html"
 // validate data, and set default values if init is true
 func (c *Config) Valid(init bool) error {
 
-	if c.Tls {
-		_, err := tls.LoadX509KeyPair(c.Certificate, c.PrivateKey)
-		if err != nil {
-			log.Warn("config: bad key pair", zap.Error(err))
-			log.Warn("config: disabling TLS")
-			c.Tls = false
-		}
+	if c.PrivateKey == "" && c.Certificate == "" && init {
+		log.Info("config: generating default key pair for tls")
+		c.PrivateKey = "./gfa_server.key"
+		c.Certificate = "./gfa_server.crt"
+		GenerateKeyPair(2048, c.PrivateKey, c.Certificate)
+	}
+	if _, err := tls.LoadX509KeyPair(c.Certificate, c.PrivateKey); err != nil {
+		return errors.New("config: bad key pair\n\t-> " + err.Error())
 	}
 	if c.Port < 1 || c.Port > 65534 {
 		if !init {

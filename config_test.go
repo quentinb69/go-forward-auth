@@ -17,7 +17,6 @@ func TestValid(t *testing.T) {
 		ExpectedErrorContains string
 		InitializeConfig      bool
 		Init                  bool
-		SetTls                bool
 		SetPrivateKey         string
 		SetCert               string
 		SetHtmlFile           string
@@ -57,34 +56,29 @@ func TestValid(t *testing.T) {
 			SetBadPort:            100000000,
 		},
 		{
-			Name:                  "INVALIDTLS_NOINIT",
-			ExpectedError:         false,
-			ExpectedErrorContains: "bad key pair",
-			InitializeConfig:      true,
-			SetTls:                true,
+			Name:             "INVALIDTLS_NOINIT",
+			ExpectedError:    false,
+			InitializeConfig: true,
 		},
 		{
 			Name:                  "INVALIDMISSINGCERT_NOINIT",
-			ExpectedError:         false,
+			ExpectedError:         true,
 			ExpectedErrorContains: "bad key pair",
 			InitializeConfig:      true,
-			SetTls:                true,
 			SetPrivateKey:         "TEST",
 		},
 		{
 			Name:                  "INVALIDMISSINGPK_NOINIT",
-			ExpectedError:         false,
+			ExpectedError:         true,
 			ExpectedErrorContains: "bad key pair",
 			InitializeConfig:      true,
-			SetTls:                true,
 			SetCert:               "TEST",
 		},
 		{
 			Name:                  "INVALIDKEYPAIR_NOINIT",
-			ExpectedError:         false,
+			ExpectedError:         true,
 			ExpectedErrorContains: "bad key pair",
 			InitializeConfig:      true,
-			SetTls:                true,
 			SetPrivateKey:         "TEST",
 			SetCert:               "TEST",
 		},
@@ -159,8 +153,6 @@ func TestValid(t *testing.T) {
 
 			// setting vals
 			switch {
-			case tc.SetTls:
-				c.Tls = tc.SetTls
 			case tc.SetCert != "":
 				c.Certificate = tc.SetCert
 			case tc.SetPrivateKey != "":
