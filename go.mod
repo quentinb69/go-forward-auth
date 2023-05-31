@@ -6,7 +6,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/gorilla/schema v1.2.0
 	github.com/knadh/koanf/v2 v2.0.1
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 	golang.org/x/crypto v0.9.0
 )
 
