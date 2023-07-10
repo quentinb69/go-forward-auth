@@ -18,6 +18,9 @@ Use at your own risk, not yet secured. Feel free to PR/Issue if you detect secur
   - return 200 and a "Welcome page" if valid JWT
 - /logout to logout
   - return 302 (means you logged-out succesfully)
+- /verify to valid claims
+  - return 200 if valid JWT
+  - return 403 otherwise
 
 To log-in, credentials are supplied via Header "Auth-Form" (POST is not forwarded to middlewares by Traefik)
 GFA check if the website is allowed for the user (cf. configuration file and Aud. in JWT)

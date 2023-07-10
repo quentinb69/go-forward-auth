@@ -38,6 +38,7 @@ func LoadServer() error {
 
 	r := http.NewServeMux()
 	r.HandleFunc("/", ShowHomeHandler)
+	r.HandleFunc("/verify", VerifyHandler)
 	r.HandleFunc("/logout", LogoutHandler)
 	r.HandleFunc("/health", HealthHandler)
 
@@ -190,6 +191,32 @@ func LogoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	// return to home
 	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// remove cookie and redirect to home
+func VerifyHandler(w http.ResponseWriter, r *http.Request) {
+
+	// Init ctx
+	ctx := &Context{
+		Ip:        GetIp(r),
+		Url:       GetHost(r),
+	}
+
+	log.Sugar().Debug("server: verify requested", zap.String("ip", ctx.Ip), "request", r)
+
+	// get jwt from cookie
+	ctx.UserCookie, _ = r.Cookie(configuration.CookieName)
+	ctx.Claims = GetValidJwtClaims(ctx.UserCookie, ctx.Ip, ctx.Url)
+	
+	// if no valid claims
+	if ctx.Claims == nil {
+		w.WriteHeader(http.StatusForbidden)
+		// no cookie, prevent bruteforce with sleeptime
+		time.Sleep(500 * time.Millisecond)
+	}
+
+	w.WriteHeader(http.StatusOK)
+	return
 }
 
 // load template and return http code and html
