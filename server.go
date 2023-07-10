@@ -207,13 +207,15 @@ func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 	// get jwt from cookie
 	ctx.UserCookie, _ = r.Cookie(configuration.CookieName)
 	ctx.Claims = GetValidJwtClaims(ctx.UserCookie, ctx.Ip, ctx.Url)
-	w.WriteHeader(http.StatusForbidden)
-	if ctx.Claims != nil {
-		w.WriteHeader(http.StatusOK)
-	} else {
+	
+	// if no valid claims
+	if ctx.Claims == nil {
+		w.WriteHeader(http.StatusForbidden)
 		// no cookie, prevent bruteforce with sleeptime
 		time.Sleep(500 * time.Millisecond)
 	}
+
+	w.WriteHeader(http.StatusOK)
 	return
 }
 
