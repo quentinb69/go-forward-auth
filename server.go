@@ -198,13 +198,11 @@ func VerifyHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Init ctx
 	ctx := &Context{
-		// CsrfToken: csrf.Token(r),
 		Ip:        GetIp(r),
-		// State:     "out",
 		Url:       GetHost(r),
 	}
 
-	log.Sugar().Debug("server: verify requested", zap.String("ip", ip), "request", r)
+	log.Sugar().Debug("server: verify requested", zap.String("ip", ctx.Ip), "request", r)
 
 	// get jwt from cookie
 	ctx.UserCookie, _ = r.Cookie(configuration.CookieName)
