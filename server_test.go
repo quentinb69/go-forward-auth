@@ -243,6 +243,8 @@ func TestVerifyHandler(t *testing.T) {
 
 			//set request
 			req := httptest.NewRequest("POST", "/verify", nil)
+			// set url
+			req.Host = "url.net"
 			req.AddCookie(tc.cookie)
 			req.RemoteAddr = "1.2.3.4"
 
