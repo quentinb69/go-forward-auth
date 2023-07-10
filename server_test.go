@@ -225,6 +225,40 @@ func TestLogoutHandler(t *testing.T) {
 	}
 }
 
+func TestVerifyHandler(t *testing.T) {
+	testCases := []struct {
+		name             string
+		cookie           *http.Cookie
+		expectedHttpCode int
+	}{
+		{"no_jwt", TestCookie["fake"], http.StatusForbidden},
+		{"wrong_jwt", TestCookie["altered"], http.StatusForbidden},
+		{"ok_jwt", TestCookie["valid"], http.StatusOK},
+	}
+	for _, tc := range testCases {
+		// shadow the test case to avoid modifying the test case
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			//set request
+			req := httptest.NewRequest("POST", "/verify", nil)
+			req.AddCookie(tc.cookie)
+			req.RemoteAddr = "1.2.3.4"
+
+			// make request
+			w := httptest.NewRecorder()
+			http.HandlerFunc(VerifyHandler)(w, req)
+			resp := w.Result()
+			body, _ := io.ReadAll(resp.Body)
+
+			// assert
+			assert.Equal(t, tc.expectedHttpCode, resp.StatusCode)
+			assert.Equal(t, string(body), "")
+		})
+	}
+}
+
 func TestShowHomeHandler(t *testing.T) {
 
 	// create needing refresh jwt cookies
