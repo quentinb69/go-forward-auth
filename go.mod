@@ -7,7 +7,7 @@ require (
 	github.com/gorilla/schema v1.2.1
 	github.com/knadh/koanf/v2 v2.0.1
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/crypto v0.16.0
+	golang.org/x/crypto v0.17.0
 )
 
 require (
