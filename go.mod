@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.0
-	github.com/gorilla/schema v1.3.0
+	github.com/gorilla/schema v1.4.0
 	github.com/knadh/koanf/v2 v2.1.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.24.0
