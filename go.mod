@@ -5,13 +5,13 @@ go 1.20
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/gorilla/schema v1.4.1
-	github.com/knadh/koanf/v2 v2.1.1
+	github.com/knadh/koanf/v2 v2.1.2
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/crypto v0.28.0
 )
 
 require (
-	github.com/go-viper/mapstructure/v2 v2.0.0-alpha.1 // indirect
+	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/knadh/koanf/maps v0.1.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
