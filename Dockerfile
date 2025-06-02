@@ -6,7 +6,7 @@ COPY *.go ./
 RUN go build -o /go-forward-auth
 
 
-FROM alpine:3.21.3
+FROM alpine:3.22.0
 
 LABEL maintainer "quentinb69"
 
